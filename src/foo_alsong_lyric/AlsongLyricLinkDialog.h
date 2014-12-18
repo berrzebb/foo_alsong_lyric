@@ -28,7 +28,7 @@ private:
 	int m_lyriccount;
 	boost::shared_ptr<LyricSearchResult> m_searchresult;
 	boost::shared_ptr<boost::thread> m_searchlistthread;
-	boost::mutex m_SecondLock; //lock tick/seconds
+	boost::mutex m_ListLock; //lock tick/seconds
 	int m_page;
 
 	static UINT CALLBACK LyricModifyDialogProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam);

@@ -372,7 +372,14 @@ DWORD LyricManager::FetchLyric(const metadb_handle_ptr &track)
 	m_CurrentLyric = res.second;
 	if(!m_CurrentLyric || !m_CurrentLyric->HasLyric())
 	{
-		m_Status = std::string(pfc::stringcvt::string_utf8_from_wide(TEXT("실시간 가사를 찾을 수 없습니다.")));
+		
+		m_Status = ("제목 : ");
+		m_Status.append(res.second->GetTitle());
+		m_Status.append("\n 아티스트 : ");
+		m_Status.append(res.second->GetArtist());
+		m_Status.append("\n 앨범 : ");
+		m_Status.append(res.second->GetAlbum());
+
 		RedrawHandler();
 		return false;
 	}

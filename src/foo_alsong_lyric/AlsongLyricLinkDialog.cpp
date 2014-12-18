@@ -199,7 +199,13 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 					ListView_SetItem(hListView, &item);
 
 					m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), 0);
-					PopulateListView();
+					if(m_searchlistthread){
+					m_searchlistthread->interrupt();
+					m_searchlistthread->join();
+					m_searchlistthread.reset();
+					}
+					m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
+
 					SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) | WS_DISABLED);
 					if(m_lyriccount > 100)
 						SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) & ~WS_DISABLED);
