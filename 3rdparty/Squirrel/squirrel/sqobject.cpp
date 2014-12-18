@@ -148,7 +148,7 @@ bool SQGenerator::Yield(SQVM *v,SQInteger target)
 	_ci = *v->ci;
 	_ci._generator=NULL;
 	for(SQInteger i=0;i<_ci._etraps;i++) {
-		_etraps.push_back(v->_etraps.top());
+		_etraps.emplace_back(v->_etraps.top());
 		v->_etraps.pop_back();
 	}
 	_state=eSuspended;
@@ -175,7 +175,7 @@ bool SQGenerator::Resume(SQVM *v,SQObjectPtr &dest)
 
 
 	for(SQInteger i=0;i<_ci._etraps;i++) {
-		v->_etraps.push_back(_etraps.top());
+		v->_etraps.emplace_back(_etraps.top());
 		_etraps.pop_back();
 	}
 	SQObject _this = _stack._vals[0];

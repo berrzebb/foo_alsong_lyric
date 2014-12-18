@@ -1,6 +1,5 @@
-3rdparty/Squirrel/lib/sqplusDU.lib
+3rdparty/boost
 *.lib
-3rdparty/Squirrel/lib/sqstdlibDU.lib
 *.opensdf
 *.sdf
 *.suo

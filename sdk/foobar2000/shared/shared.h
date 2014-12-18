@@ -19,7 +19,8 @@
 #include <ddeml.h>
 #include <commctrl.h>
 #include <uxtheme.h>
-#include <tmschema.h>
+//#include <tmschema.h>
+#include <vssym32.h>
 
 #ifndef NOTHROW
 #ifdef _MSC_VER

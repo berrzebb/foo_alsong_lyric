@@ -23,7 +23,7 @@ struct SQFuncState
 	void SetStackSize(SQInteger n);
 	SQInteger CountOuters(SQInteger stacksize);
 	void SnoozeOpt(){_optimization=false;}
-	void AddDefaultParam(SQInteger trg) { _defaultparams.push_back(trg); }
+	void AddDefaultParam(SQInteger trg) { _defaultparams.emplace_back(trg); }
 	SQInteger GetDefaultParamCount() { return _defaultparams.size(); }
 	SQInteger GetCurrentPos(){return _instructions.size()-1;}
 	SQInteger GetNumericConstant(const SQInteger cons);

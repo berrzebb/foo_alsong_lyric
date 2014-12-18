@@ -32,6 +32,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <list>
 #include <exception>
 #include <typeinfo>

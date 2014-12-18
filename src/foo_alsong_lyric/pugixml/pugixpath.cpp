@@ -737,7 +737,7 @@ namespace pugi
 		m_type = reverse ? type_sorted_reverse : type_sorted;
 	}
 
-	void xpath_node_set::push_back(const xpath_node& n)
+	void xpath_node_set::emplace_back(const xpath_node& n)
 	{
 		if (m_end == m_eos)
 			append(&n, &n + 1);
@@ -1479,17 +1479,17 @@ namespace pugi
 			switch (m_test)
 			{
 			case nodetest_name:
-				if (!strcmp(a.name(), m_contents)) ns.push_back(xpath_node(a, parent));
+				if (!strcmp(a.name(), m_contents)) ns.emplace_back(xpath_node(a, parent));
 				break;
 				
 			case nodetest_type_node:
 			case nodetest_all:
-				ns.push_back(xpath_node(a, parent));
+				ns.emplace_back(xpath_node(a, parent));
 				break;
 				
 			case nodetest_all_in_namespace:
 				if (!strncmp(a.name(), m_contents, strlen(m_contents)))
-					ns.push_back(xpath_node(a, parent));
+					ns.emplace_back(xpath_node(a, parent));
 				break;
 			
 			default:
@@ -1504,41 +1504,41 @@ namespace pugi
 			switch (m_test)
 			{
 			case nodetest_name:
-				if (n.type() == node_element && !strcmp(n.name(), m_contents)) ns.push_back(n);
+				if (n.type() == node_element && !strcmp(n.name(), m_contents)) ns.emplace_back(n);
 				break;
 				
 			case nodetest_type_node:
-				ns.push_back(n);
+				ns.emplace_back(n);
 				break;
 				
 			case nodetest_type_comment:
 				if (n.type() == node_comment)
-					ns.push_back(n);
+					ns.emplace_back(n);
 				break;
 				
 			case nodetest_type_text:
 				if (n.type() == node_pcdata || n.type() == node_cdata)
-					ns.push_back(n);
+					ns.emplace_back(n);
 				break;
 				
 			case nodetest_type_pi:
 				if (n.type() == node_pi)
-					ns.push_back(n);
+					ns.emplace_back(n);
 				break;
 									
 			case nodetest_pi:
 				if (n.type() == node_pi && !strcmp(n.name(), m_contents))
-					ns.push_back(n);
+					ns.emplace_back(n);
 				break;
 				
 			case nodetest_all:
 				if (n.type() == node_element)
-					ns.push_back(n);
+					ns.emplace_back(n);
 				break;
 				
 			case nodetest_all_in_namespace:
 				if (n.type() == node_element && !strncmp(n.name(), m_contents, strlen(m_contents)))
-					ns.push_back(n);
+					ns.emplace_back(n);
 				break;
 
 			default:
@@ -2491,7 +2491,7 @@ namespace pugi
 			
 				if (c.root)
 				{
-  	            	ns.push_back(c.root);
+  	            	ns.emplace_back(c.root);
 				
 					apply_predicates(ns, 0, c);
 				}

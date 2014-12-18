@@ -153,19 +153,33 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 				{
 					pfc::string8 artist;
 					uGetDlgItemText(m_hWnd, IDC_ARTIST, artist);
+
 					pfc::string8 title;
 					uGetDlgItemText(m_hWnd, IDC_TITLE, title);
+
+
 					if(artist.get_length() == 0)
 					{
-						MessageBox(m_hWnd, TEXT("아티스트를 입력해 주세요"), TEXT("에러"), MB_OK);
-						return TRUE;
-					}
-					if(title.get_length() == 0)
-					{
-						MessageBox(m_hWnd, TEXT("제목을 입력해 주세요"), TEXT("에러"), MB_OK);
-						return TRUE;
+
+						//MessageBox(m_hWnd, TEXT("아티스트를 입력해 주세요"), TEXT("에러"), MB_OK);
+						//return TRUE;
+						/// 아티스트가 입력되지 않았다면 기본값으로 공백
+						artist.set_string("");
 					}
 
+
+					if(title.get_length() == 0)
+					{
+						///MessageBox(m_hWnd, TEXT("제목을 입력해 주세요"), TEXT("에러"), MB_OK);
+						///return TRUE;
+						/// 제목이 입력되지 않았다면 기본값으로 공백
+						title.set_string("");
+					}
+					if(artist.toString() == "" && title.toString() == "")
+					{
+						MessageBox(m_hWnd, TEXT("제목이나 아티스트명을 입력해 주세요"), TEXT("에러"), MB_OK);
+						return TRUE;
+					}
 					m_page = 0;
 					m_lyriccount = LyricSourceAlsong().SearchLyricGetCount(artist.toString(), title.toString());
 					std::stringstream str;

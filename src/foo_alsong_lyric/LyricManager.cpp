@@ -41,7 +41,7 @@ LyricManager::LyricManager() : m_Seconds(0)
 		if(src)
 		{
 			src->SetConfig(cfg_lyricsourcecfg.get_value(*it));
-			m_lyricSources.push_back(src);
+			m_lyricSources.emplace_back(src);
 		}
 	}
 
@@ -52,7 +52,7 @@ LyricManager::LyricManager() : m_Seconds(0)
 		if(src)
 		{
 			src->SetConfig(cfg_lyricsourcecfg.get_value(*it));
-			m_lyricSaveSources.push_back(src);
+			m_lyricSaveSources.emplace_back(src);
 		}
 	}
 
@@ -97,7 +97,7 @@ void LyricManager::UpdateConfig()
 		if(src)
 		{
 			src->SetConfig(cfg_lyricsourcecfg.get_value(*it));
-			m_lyricSources.push_back(src);
+			m_lyricSources.emplace_back(src);
 		}
 	}
 
@@ -108,7 +108,7 @@ void LyricManager::UpdateConfig()
 		if(src)
 		{
 			src->SetConfig(cfg_lyricsourcecfg.get_value(*it));
-			m_lyricSaveSources.push_back(src);
+			m_lyricSaveSources.emplace_back(src);
 		}
 	}
 }
@@ -212,7 +212,7 @@ std::vector<LyricLine> LyricManager::GetLyricBefore(int n)
 		for(cnt = 0; (cnt < n); cnt ++, it --)
 		{
 			if((cfg_skipempty && boost::trim_copy(it->lyric).size() != 0) || !cfg_skipempty)
-				ret.push_back(*it);
+				ret.emplace_back(*it);
 			else if(cfg_skipempty) //empty line
 				cnt --;
 			if(m_CurrentLyric->IsBeginOfLyric(it))
@@ -234,7 +234,7 @@ std::vector<LyricLine> LyricManager::GetLyric()
 		std::vector<LyricLine>::const_iterator it;
 		for(it = m_LyricLine; !m_CurrentLyric->IsEndOfLyric(it) && it->time == m_LyricLine->time; it ++)
 			if((cfg_skipempty && boost::trim_copy(it->lyric).size() != 0) || !cfg_skipempty)
-				ret.push_back(*it);
+				ret.emplace_back(*it);
 
 		return ret;
 	}
@@ -251,7 +251,7 @@ std::vector<LyricLine> LyricManager::GetLyricAfter(int n)
 		for(it = m_LyricLine + 1, cnt = 0; (cnt < n) && !m_CurrentLyric->IsEndOfLyric(it); cnt ++, it ++)
 		{
 			if((cfg_skipempty && boost::trim_copy(it->lyric).size() != 0) || !cfg_skipempty)
-				ret.push_back(*it);
+				ret.emplace_back(*it);
 			else if(cfg_skipempty) //empty line
 				cnt --;
 		}

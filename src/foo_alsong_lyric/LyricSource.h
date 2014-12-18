@@ -69,7 +69,7 @@ public:
 	{
 		std::vector<boost::shared_ptr<LyricSource> > ret;
 		for(std::map<GUID, boost::shared_ptr<LyricSource> >::iterator it = m_lyricSources.begin(); it != m_lyricSources.end(); it ++)
-			ret.push_back(it->second);
+			ret.emplace_back(it->second);
 
 		return ret;
 	}

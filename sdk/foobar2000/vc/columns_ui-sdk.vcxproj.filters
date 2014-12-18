@@ -2,13 +2,13 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Panel API">
-      <UniqueIdentifier>{fdace0fe-eca4-467a-ba6c-54c20f070304}</UniqueIdentifier>
+      <UniqueIdentifier>{932803b1-cf42-4962-b3d2-ff23d86e6176}</UniqueIdentifier>
     </Filter>
     <Filter Include="Helpers">
-      <UniqueIdentifier>{59978053-9bfa-4d97-bed5-e5bb8f50ebe0}</UniqueIdentifier>
+      <UniqueIdentifier>{d707b04a-bc64-487b-9521-f978141b767c}</UniqueIdentifier>
     </Filter>
     <Filter Include="CUI">
-      <UniqueIdentifier>{a9d4afda-edf6-42a4-9b57-2ea9f436ce25}</UniqueIdentifier>
+      <UniqueIdentifier>{7a66e265-f879-46f3-9d28-8c3f89679695}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

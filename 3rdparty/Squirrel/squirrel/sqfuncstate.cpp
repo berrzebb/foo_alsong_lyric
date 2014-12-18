@@ -260,7 +260,7 @@ void SQFuncState::SetIntructionParam(SQInteger pos,SQInteger arg,SQInteger val)
 SQInteger SQFuncState::AllocStackPos()
 {
 	SQInteger npos=_vlocals.size();
-	_vlocals.push_back(SQLocalVarInfo());
+	_vlocals.emplace_back(SQLocalVarInfo());
 	if(_vlocals.size()>((SQUnsignedInteger)_stacksize)) {
 		if(_stacksize>MAX_FUNC_STACKSIZE) Error(_SC("internal compiler error: too many locals"));
 		_stacksize=_vlocals.size();
@@ -271,11 +271,11 @@ SQInteger SQFuncState::AllocStackPos()
 SQInteger SQFuncState::PushTarget(SQInteger n)
 {
 	if(n!=-1){
-		_targetstack.push_back(n);
+		_targetstack.emplace_back(n);
 		return n;
 	}
 	n=AllocStackPos();
-	_targetstack.push_back(n);
+	_targetstack.emplace_back(n);
 	return n;
 }
 
@@ -328,7 +328,7 @@ void SQFuncState::SetStackSize(SQInteger n)
 				_outers--;
 			}
 			lvi._end_op = GetCurrentPos();
-			_localvarinfos.push_back(lvi);
+			_localvarinfos.emplace_back(lvi);
 		}
 		_vlocals.pop_back();
 	}
@@ -358,7 +358,7 @@ SQInteger SQFuncState::PushLocalVariable(const SQObject &name)
 	lvi._name=name;
 	lvi._start_op=GetCurrentPos()+1;
 	lvi._pos=_vlocals.size();
-	_vlocals.push_back(lvi);
+	_vlocals.emplace_back(lvi);
 	if(_vlocals.size()>((SQUnsignedInteger)_stacksize))_stacksize=_vlocals.size();
 	return pos;
 }
@@ -398,13 +398,13 @@ SQInteger SQFuncState::GetOuterVariable(const SQObject &name)
 		if(pos == -1) {
 			pos = _parent->GetOuterVariable(name);
 			if(pos != -1) {
-				_outervalues.push_back(SQOuterVar(name,SQObjectPtr(SQInteger(pos)),otOUTER)); //local
+				_outervalues.emplace_back(SQOuterVar(name,SQObjectPtr(SQInteger(pos)),otOUTER)); //local
 				return _outervalues.size() - 1;	
 			}
 		}
 		else {
 			_parent->MarkLocalAsOuter(pos);
-			_outervalues.push_back(SQOuterVar(name,SQObjectPtr(SQInteger(pos)),otLOCAL)); //local
+			_outervalues.emplace_back(SQOuterVar(name,SQObjectPtr(SQInteger(pos)),otLOCAL)); //local
 			return _outervalues.size() - 1;
 			
 			
@@ -416,7 +416,7 @@ SQInteger SQFuncState::GetOuterVariable(const SQObject &name)
 void SQFuncState::AddParameter(const SQObject &name)
 {
 	PushLocalVariable(name);
-	_parameters.push_back(name);
+	_parameters.emplace_back(name);
 }
 
 void SQFuncState::AddLineInfos(SQInteger line,bool lineop,bool force)
@@ -426,7 +426,7 @@ void SQFuncState::AddLineInfos(SQInteger line,bool lineop,bool force)
 		li._line=line;li._op=(GetCurrentPos()+1);
 		if(lineop)AddInstruction(_OP_LINE,0,line);
 		if(_lastline!=line) {
-			_lineinfos.push_back(li);
+			_lineinfos.emplace_back(li);
 		}
 		_lastline=line;
 	}
@@ -576,7 +576,7 @@ void SQFuncState::AddInstruction(SQInstruction &i)
 		}
 	}
 	_optimization = true;
-	_instructions.push_back(i);
+	_instructions.emplace_back(i);
 }
 
 SQObject SQFuncState::CreateString(const SQChar *s,SQInteger len)
@@ -631,7 +631,7 @@ SQFuncState *SQFuncState::PushChildState(SQSharedState *ss)
 {
 	SQFuncState *child = (SQFuncState *)sq_malloc(sizeof(SQFuncState));
 	new (child) SQFuncState(ss,this,_errfunc,_errtarget);
-	_childstates.push_back(child);
+	_childstates.emplace_back(child);
 	return child;
 }
 

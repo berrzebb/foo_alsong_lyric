@@ -67,7 +67,7 @@ std::vector<char> Socket::ReceiveUntilEOF()
 		if(boost::this_thread::interruption_requested())
 			return std::vector<char>();
 	}
-	data.push_back('\0');
+	data.emplace_back('\0');
 
 	return data;
 }

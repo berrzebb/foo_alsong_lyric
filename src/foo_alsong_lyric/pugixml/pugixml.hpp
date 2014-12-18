@@ -1966,7 +1966,7 @@ namespace pugi
 
 		iterator mut_begin();
 		
-		void push_back(const xpath_node& n);
+		void emplace_back(const xpath_node& n);
 		
 		template <typename Iterator> void append(Iterator begin, Iterator end);
 		

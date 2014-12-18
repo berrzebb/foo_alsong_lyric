@@ -60,7 +60,7 @@ DWORD Lyric::Split(const char *Delimiter)
 		std::string temp = std::string(lastpos, nowpos - lastpos - delimlen);
 		if(temp.length() == 0)
 			temp = " ";
-		m_LyricLines.push_back(LyricLine(time, temp));
+		m_LyricLines.emplace_back(LyricLine(time, temp));
 		lastpos = nowpos;
 	}
 

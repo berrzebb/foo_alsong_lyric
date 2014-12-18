@@ -90,7 +90,7 @@ public:
 		{
 			GUID tmp;
 			p_stream->read(&tmp, sizeof(GUID), p_abort);
-			m_reallist.push_back(tmp);
+			m_reallist.emplace_back(tmp);
 		}
 	}
 };

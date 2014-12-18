@@ -1,5 +1,5 @@
 #if (_WIN32_WINNT < _WIN32_WINNT_WIN7) && !defined(_MINWINBASE)
-
+/*
 typedef struct _REASON_CONTEXT {
     ULONG Version;
     DWORD Flags;
@@ -15,7 +15,7 @@ typedef struct _REASON_CONTEXT {
         LPWSTR SimpleReasonString;
     } Reason;
 } REASON_CONTEXT, *PREASON_CONTEXT;
-
+*/
 //
 // Power Request APIs
 //
