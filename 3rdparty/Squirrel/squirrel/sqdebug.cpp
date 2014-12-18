@@ -74,7 +74,7 @@ SQString *SQVM::PrintObjVal(const SQObjectPtr &o)
 	switch(type(o)) {
 	case OT_STRING: return _string(o);
 	case OT_INTEGER:
-		scsprintf(_sp(rsl(NUMBER_MAX_CHAR+1)), _SC("%d"), _integer(o));
+		scsprintf(_sp(rsl(NUMBER_MAX_CHAR+1)), _PRINT_INT_FMT, _integer(o));
 		return SQString::Create(_ss(this), _spval);
 		break;
 	case OT_FLOAT:
@@ -95,7 +95,7 @@ void SQVM::Raise_IdxError(const SQObjectPtr &o)
 void SQVM::Raise_CompareError(const SQObject &o1, const SQObject &o2)
 {
 	SQObjectPtr oval1 = PrintObjVal(o1), oval2 = PrintObjVal(o2);
-	Raise_Error(_SC("comparsion between '%.50s' and '%.50s'"), _stringval(oval1), _stringval(oval2));
+	Raise_Error(_SC("comparison between '%.50s' and '%.50s'"), _stringval(oval1), _stringval(oval2));
 }
 
 

@@ -7,6 +7,10 @@ struct SQInstance;
 struct SQClassMember {
 	SQObjectPtr val;
 	SQObjectPtr attrs;
+	void Null() {
+		val.Null();
+		attrs.Null();
+	}
 };
 
 typedef sqvector<SQClassMember> SQClassMemberVec;
@@ -63,6 +67,7 @@ public:
 	void Finalize();
 #ifndef NO_GARBAGE_COLLECTOR
 	void Mark(SQCollectable ** );
+	SQObjectType GetType() {return OT_CLASS;}
 #endif
 	SQInteger Next(const SQObjectPtr &refpos, SQObjectPtr &outkey, SQObjectPtr &outval);
 	SQInstance *CreateInstance();
@@ -70,7 +75,7 @@ public:
 	SQClass *_base;
 	SQClassMemberVec _defaultvalues;
 	SQClassMemberVec _methods;
-	SQObjectPtrVec _metamethods;
+	SQObjectPtr _metamethods[MT_LAST];
 	SQObjectPtr _attributes;
 	SQUserPointer _typetag;
 	SQRELEASEHOOK _hook;
@@ -80,7 +85,7 @@ public:
 };
 
 #define calcinstancesize(_theclass_) \
-	(_theclass_->_udsize + sizeof(SQInstance) + (sizeof(SQObjectPtr)*(_theclass_->_defaultvalues.size()>0?_theclass_->_defaultvalues.size()-1:0)))
+	(_theclass_->_udsize + sq_aligning(sizeof(SQInstance) +  (sizeof(SQObjectPtr)*(_theclass_->_defaultvalues.size()>0?_theclass_->_defaultvalues.size()-1:0))))
 
 struct SQInstance : public SQDelegable 
 {
@@ -142,6 +147,7 @@ public:
 	void Finalize();
 #ifndef NO_GARBAGE_COLLECTOR 
 	void Mark(SQCollectable ** );
+	SQObjectType GetType() {return OT_INSTANCE;}
 #endif
 	bool InstanceOf(SQClass *trg);
 	bool GetMetaMethod(SQVM *v,SQMetaMethod mm,SQObjectPtr &res);

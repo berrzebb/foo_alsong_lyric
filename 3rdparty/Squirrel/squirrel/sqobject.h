@@ -57,6 +57,31 @@ enum SQMetaMethod{
 #define MM_NEWMEMBER _SC("_newmember")
 #define MM_INHERITED _SC("_inherited")
 
+
+#define _CONSTRUCT_VECTOR(type,size,ptr) { \
+	for(SQInteger n = 0; n < ((SQInteger)size); n++) { \
+			new (&ptr[n]) type(); \
+		} \
+}
+
+#define _DESTRUCT_VECTOR(type,size,ptr) { \
+	for(SQInteger nl = 0; nl < ((SQInteger)size); nl++) { \
+			ptr[nl].~type(); \
+	} \
+}
+
+#define _COPY_VECTOR(dest,src,size) { \
+	for(SQInteger _n_ = 0; _n_ < ((SQInteger)size); _n_++) { \
+		dest[_n_] = src[_n_]; \
+	} \
+}
+
+#define _NULL_SQOBJECT_VECTOR(vec,size) { \
+	for(SQInteger _n_ = 0; _n_ < ((SQInteger)size); _n_++) { \
+		vec[_n_].Null(); \
+	} \
+}
+
 #define MINPOWER2 4
 
 struct SQRefCounted
@@ -67,6 +92,7 @@ struct SQRefCounted
 	virtual ~SQRefCounted();
 	SQWeakRef *GetWeakRef(SQObjectType type);
 	virtual void Release()=0;
+	
 };
 
 struct SQWeakRef : SQRefCounted
@@ -127,12 +153,18 @@ struct SQObjectPtr;
 #define _rawval(obj) ((obj)._unVal.raw)
 
 #define _stringval(obj) (obj)._unVal.pString->_val
-#define _userdataval(obj) (obj)._unVal.pUserData->_val
+#define _userdataval(obj) ((SQUserPointer)sq_aligning((obj)._unVal.pUserData + 1))
 
 #define tofloat(num) ((type(num)==OT_INTEGER)?(SQFloat)_integer(num):_float(num))
 #define tointeger(num) ((type(num)==OT_FLOAT)?(SQInteger)_float(num):_integer(num))
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
+#if defined(SQUSEDOUBLE) && !defined(_SQ64) || !defined(SQUSEDOUBLE) && defined(_SQ64)
+#define SQ_REFOBJECT_INIT()	SQ_OBJECT_RAWINIT()
+#else
+#define SQ_REFOBJECT_INIT()
+#endif
+
 #define _REF_TYPE_DECL(type,_class,sym) \
 	SQObjectPtr(_class * x) \
 	{ \
@@ -149,6 +181,7 @@ struct SQObjectPtr;
 		tOldType=_type; \
 		unOldVal=_unVal; \
 		_type = type; \
+		SQ_REFOBJECT_INIT() \
 		_unVal.sym = x; \
 		_unVal.pRefCounted->_uiRef++; \
 		__Release(tOldType,unOldVal); \
@@ -166,6 +199,7 @@ struct SQObjectPtr;
 	{  \
 		__Release(_type,_unVal); \
 		_type = type; \
+		SQ_OBJECT_RAWINIT() \
 		_unVal.sym = x; \
 		return *this; \
 	}
@@ -179,16 +213,14 @@ struct SQObjectPtr : public SQObject
 	}
 	SQObjectPtr(const SQObjectPtr &o)
 	{
-		//SQ_OBJECT_RAWINIT()
-		_type=o._type;
-		_unVal=o._unVal;
+		_type = o._type;
+		_unVal = o._unVal;
 		__AddRef(_type,_unVal);
 	}
 	SQObjectPtr(const SQObject &o)
 	{
-		//SQ_OBJECT_RAWINIT()
-		_type=o._type;
-		_unVal=o._unVal;
+		_type = o._type;
+		_unVal = o._unVal;
 		__AddRef(_type,_unVal);
 	}
 	_REF_TYPE_DECL(OT_TABLE,SQTable,pTable)
@@ -218,6 +250,7 @@ struct SQObjectPtr : public SQObject
 	inline SQObjectPtr& operator=(bool b)
 	{ 
 		__Release(_type,_unVal);
+		SQ_OBJECT_RAWINIT()
 		_type = OT_BOOL;
 		_unVal.nInteger = b?1:0;
 		return *this;
@@ -254,13 +287,26 @@ struct SQObjectPtr : public SQObject
 	}
 	inline void Null()
 	{
-		__Release(_type ,_unVal);
+		SQObjectType tOldType = _type;
+		SQObjectValue unOldVal = _unVal;
 		_type = OT_NULL;
-		_unVal.pUserPointer = NULL;
+		_unVal.raw = (SQRawObjectVal)NULL;
+		__Release(tOldType ,unOldVal);
 	}
 	private:
 		SQObjectPtr(const SQChar *){} //safety
 };
+
+
+inline void _Swap(SQObject &a,SQObject &b)
+{
+	SQObjectType tOldType = a._type;
+	SQObjectValue unOldVal = a._unVal;
+	a._type = b._type;
+	a._unVal = b._unVal;
+	b._type = tOldType;
+	b._unVal = unOldVal;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
 #ifndef NO_GARBAGE_COLLECTOR
@@ -269,6 +315,7 @@ struct SQCollectable : public SQRefCounted {
 	SQCollectable *_next;
 	SQCollectable *_prev;
 	SQSharedState *_sharedstate;
+	virtual SQObjectType GetType()=0;
 	virtual void Release()=0;
 	virtual void Mark(SQCollectable **chain)=0;
 	void UnMark();

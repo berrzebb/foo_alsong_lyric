@@ -8,6 +8,8 @@
 #include "sqfuncproto.h"
 #include "sqclosure.h"
 
+
+
 SQClass::SQClass(SQSharedState *ss,SQClass *base)
 {
 	_base = base;
@@ -16,12 +18,12 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
 	_udsize = 0;
 	_locked = false;
 	_constructoridx = -1;
-	_metamethods.resize(MT_LAST); //size it to max size
 	if(_base) {
 		_constructoridx = _base->_constructoridx;
+		_udsize = _base->_udsize;
 		_defaultvalues.copy(base->_defaultvalues);
 		_methods.copy(base->_methods);
-		_metamethods.copy(base->_metamethods);
+		_COPY_VECTOR(_metamethods,base->_metamethods,MT_LAST);
 		__ObjAddRef(_base);
 	}
 	_members = base?base->_members->Clone() : SQTable::Create(ss,0);
@@ -32,10 +34,10 @@ SQClass::SQClass(SQSharedState *ss,SQClass *base)
 }
 
 void SQClass::Finalize() { 
-	_attributes = _null_;
-	_defaultvalues.resize(0);
+	_attributes.Null();
+	_NULL_SQOBJECT_VECTOR(_defaultvalues,_defaultvalues.size());
 	_methods.resize(0);
-	_metamethods.resize(0);
+	_NULL_SQOBJECT_VECTOR(_metamethods,MT_LAST);
 	__ObjRelease(_members);
 	if(_base) {
 		__ObjRelease(_base);
@@ -74,7 +76,7 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 			}
 			if(type(temp) == OT_NULL) {
 				bool isconstructor;
-				_thread(ss->_root_vm)->IsEqual(ss->_constructoridx, key, isconstructor);
+				SQVM::IsEqual(ss->_constructoridx, key, isconstructor);
 				if(isconstructor) {
 					_constructoridx = (SQInteger)_methods.size();
 				}
@@ -178,9 +180,10 @@ void SQInstance::Finalize()
 {
 	SQUnsignedInteger nvalues = _class->_defaultvalues.size();
 	__ObjRelease(_class);
-	for(SQUnsignedInteger i = 0; i < nvalues; i++) {
-		_values[i] = _null_;
-	}
+	_NULL_SQOBJECT_VECTOR(_values,nvalues);
+	//for(SQUnsignedInteger i = 0; i < nvalues; i++) {
+//		_values[i].Null();
+//	}
 }
 
 SQInstance::~SQInstance()
