@@ -398,8 +398,7 @@ namespace ui_extension{
 	class window_factory : public service_factory_base
 	{
 	public:
-		window_factory() : service_factory_base(window::class_guid, service_factory_traits<window_factory<T>>::factory_list())
- 
+		window_factory() : service_factory_base(window::class_guid)
 		{
 		}
 
@@ -428,7 +427,7 @@ namespace ui_extension{
 	{
 		service_impl_single_t<window_implementation<T, true> > g_instance;
 	public:
-		window_factory_single() : service_factory_base(window::class_guid, service_factory_traits<window_factory_single<T>>::factory_list()) {}
+		window_factory_single() : service_factory_base(window::class_guid) {}
 
 		~window_factory_single() {}
 

@@ -10,7 +10,7 @@ public:
 	}
 };
 
-class NOVTABLE foobar2000_client : public foobar2000_component_globals
+class NOVTABLE foobar2000_client
 {
 public:
 	typedef service_factory_base* pservice_factory_base;

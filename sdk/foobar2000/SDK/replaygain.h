@@ -29,10 +29,10 @@ struct t_replaygain_config
 };
 
 FB2K_STREAM_READER_OVERLOAD(t_replaygain_config) {
-	return stream >> value.m_source_mode >> value.m_processing_mode >> value.m_preamp_with_rg >> value.m_preamp_with_rg;
+	return stream >> value.m_source_mode >> value.m_processing_mode >> value.m_preamp_with_rg >> value.m_preamp_without_rg;
 }
 FB2K_STREAM_WRITER_OVERLOAD(t_replaygain_config) {
-	return stream << value.m_source_mode << value.m_processing_mode << value.m_preamp_with_rg << value.m_preamp_with_rg;
+	return stream << value.m_source_mode << value.m_processing_mode << value.m_preamp_with_rg << value.m_preamp_without_rg;
 }
 
 //! Core service providing methods to retrieve/alter playback ReplayGain settings, as well as use ReplayGain configuration dialog.

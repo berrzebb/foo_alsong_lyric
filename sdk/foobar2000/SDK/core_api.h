@@ -25,10 +25,16 @@ namespace core_api {
 	bool is_initializing();
 	//! Returns filesystem path to directory with user settings, e.g. file://c:\documents_and_settings\username\blah\foobar2000
 	const char * get_profile_path();
+	
+	//! Returns a path to <file name> in fb2k profile folder.
+	static pfc::string8 pathInProfile(const char * fileName) { pfc::string8 p( core_api::get_profile_path() ); p.add_filename( fileName ); return std::move(p); }
 
 	//! Returns whether foobar2000 has been installed in "portable" mode.
 	bool is_portable_mode_enabled();
 
+	//! Returns whether foobar2000 is currently running in quiet mode. \n
+	//! Quiet mode bypasses all GUI features, disables Media Library and does not save any changes to app configuration. \n
+	//! Your component should not display any forms of user interface when running in quiet mode, as well as avoid saving configuration on its own (no need to worry if you only rely on cfg_vars or config_io_callback, they will simply be ignored on shutdown).
 	bool is_quiet_mode_enabled();
 };
 

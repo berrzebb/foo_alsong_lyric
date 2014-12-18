@@ -43,3 +43,23 @@ public:
 
 	void query_task_name(pfc::string_base & out) { out = "<unnamed task>"; }
 };
+
+class app_close_blocking_task_impl_dynamic : public app_close_blocking_task {
+public:
+	app_close_blocking_task_impl_dynamic() : m_taskActive() {}
+	~app_close_blocking_task_impl_dynamic() { toggle_blocking(false); }
+
+	void query_task_name(pfc::string_base & out) { out = "<unnamed task>"; }
+	
+protected:
+	void toggle_blocking(bool state) {
+		if (state != m_taskActive) {
+			static_api_ptr_t<app_close_blocking_task_manager> api;
+			if (state) api->register_task(this);
+			else api->unregister_task(this);
+			m_taskActive = state;
+		}
+	}
+private:
+	bool m_taskActive;
+};

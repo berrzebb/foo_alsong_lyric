@@ -1,10 +1,16 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
  lang="en" dir="ltr">
 <head>
-  <title>foobar2000 1.0 SDK readme</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <meta name="generator" content="DokuWiki Release 2007-06-26b" />
-  <link rel="stylesheet" type="text/css" href="sdk-readme.css" />
+  <title>help:sdk-readme</title>
+<meta name="generator" content="DokuWiki Release 2007-06-26b" />
+<meta name="robots" content="noindex,nofollow" />
+<meta name="date" content="2014-06-30T12:35:16+0100" />
+<meta name="keywords" content="help,sdk-readme" />
+<link rel="stylesheet" type="text/css" href="sdk-readme.css" />
+
 </head>
 <body>
 <div class="dokuwiki export">
@@ -13,9 +19,10 @@
 <div id="toc__inside">
 
 <ul class="toc">
-<li class="level1"><div class="li"><span class="li"><a href="#foobar2000_1.0_sdk_readme" class="toc">foobar2000 1.0 SDK readme</a></span></div>
+<li class="level1"><div class="li"><span class="li"><a href="#foobar2000_v1.3_sdk_readme" class="toc">foobar2000 v1.3 SDK readme</a></span></div>
 <ul class="toc">
 <li class="level2"><div class="li"><span class="li"><a href="#compatibility" class="toc">Compatibility</a></span></div></li>
+<li class="level2"><div class="li"><span class="li"><a href="#version_1.3_notes" class="toc">Version 1.3 notes</a></span></div></li>
 <li class="level2"><div class="li"><span class="li"><a href="#basic_usage" class="toc">Basic usage</a></span></div></li>
 <li class="level2"><div class="li"><span class="li"><a href="#structure_of_a_component" class="toc">Structure of a component</a></span></div>
 <ul class="toc">
@@ -39,20 +46,47 @@
 
 
 
-<h1><a name="foobar2000_1.0_sdk_readme" id="foobar2000_1.0_sdk_readme">foobar2000 1.0 SDK readme</a></h1>
+<h1><a name="foobar2000_v1.3_sdk_readme" id="foobar2000_v1.3_sdk_readme">foobar2000 v1.3 SDK readme</a></h1>
 <div class="level1">
 
 </div>
-<!-- SECTION "foobar2000 1.0 SDK readme" [1-42] -->
+<!-- SECTION "foobar2000 v1.3 SDK readme" [1-43] -->
 <h2><a name="compatibility" id="compatibility">Compatibility</a></h2>
 <div class="level2">
 
 <p>
- Components built with this <acronym title="Software Development Kit">SDK</acronym> are compatible with foobar2000 1.0. They are not compatible with any earlier versions (will fail to load), and not guaranteed to be compatible with any future versions, though upcoming releases will aim to maintain compatibility as far as possible without crippling newly added functionality.
+ Components built with this <acronym title="Software Development Kit">SDK</acronym> are compatible with foobar2000 1.3. They are not compatible with any earlier versions (will fail to load), and not guaranteed to be compatible with any future versions, though upcoming releases will aim to maintain compatibility as far as possible without crippling newly added functionality.
 </p>
 
 </div>
-<!-- SECTION "Compatibility" [43-394] -->
+<!-- SECTION "Compatibility" [44-395] -->
+<h2><a name="version_1.3_notes" id="version_1.3_notes">Version 1.3 notes</a></h2>
+<div class="level2">
+
+<p>
+foobar2000 version 1.3 uses different metadb behavior semantics than older versions, to greatly improve the performance of multithreaded operation by reducing the time spent within global metadb locks.
+</p>
+
+<p>
+Any methods that: 
+</p>
+<ul>
+<li class="level1"><div class="li"> Lock the metadb - database_lock() etc</div>
+</li>
+<li class="level1"><div class="li"> Retrieve direct pointers to metadb info - get_info_locked() style</div>
+</li>
+</ul>
+
+<p>
+ .. are now marked deprecated and implemented only for backwards compatibility; they should not be used in any new code.
+</p>
+
+<p>
+It is recommended that you change your existing code using these to obtain track information using new get_info_ref() style methods for much better performance as these methods have minimal overhead and require no special care when used in multiple concurrent threads.
+</p>
+
+</div>
+<!-- SECTION "Version 1.3 notes" [396-1151] -->
 <h2><a name="basic_usage" id="basic_usage">Basic usage</a></h2>
 <div class="level2">
 
@@ -76,7 +110,7 @@ Optionally, components can use helper libraries with various non-critical code t
 <ul>
 <li class="level1"><div class="li"> foobar2000_<acronym title="Software Development Kit">SDK</acronym>_helpers - a library of various helper code commonly used by foobar2000 components.</div>
 </li>
-<li class="level1"><div class="li"> foobar2000_ATL_helpers - another library of various helper code commonly used by foobar2000 components; requires WTL. Note that it depends on foobar2000_<acronym title="Software Development Kit">SDK</acronym> and foobar2000_<acronym title="Software Development Kit">SDK</acronym>_helpers projects.</div>
+<li class="level1"><div class="li"> foobar2000_ATL_helpers - another library of various helper code commonly used by foobar2000 components; requires WTL.</div>
 </li>
 </ul>
 
@@ -97,7 +131,7 @@ Component code should include the following header files:
 </ul>
 
 </div>
-<!-- SECTION "Basic usage" [395-2222] -->
+<!-- SECTION "Basic usage" [1152-2903] -->
 <h2><a name="structure_of_a_component" id="structure_of_a_component">Structure of a component</a></h2>
 <div class="level2">
 
@@ -106,7 +140,7 @@ Component code should include the following header files:
 </p>
 
 </div>
-<!-- SECTION "Structure of a component" [2223-2389] -->
+<!-- SECTION "Structure of a component" [2904-3070] -->
 <h3><a name="services" id="services">Services</a></h3>
 <div class="level3">
 
@@ -123,7 +157,7 @@ Each service object provides reference counter features and (<code>service_add_r
 </p>
 
 </div>
-<!-- SECTION "Services" [2390-4655] -->
+<!-- SECTION "Services" [3071-5336] -->
 <h3><a name="entrypoint_services" id="entrypoint_services">Entrypoint services</a></h3>
 <div class="level3">
 
@@ -165,7 +199,7 @@ A typical entrypoint service implementation looks like this:
 <span class="br0">&#125;</span>;
 <span class="kw4">static</span> service_factory_single_t&lt;myservice_impl&gt; g_myservice_impl_factory;</pre>
 </div>
-<!-- SECTION "Entrypoint services" [4656-7127] -->
+<!-- SECTION "Entrypoint services" [5337-7808] -->
 <h3><a name="service_extensions" id="service_extensions">Service extensions</a></h3>
 <div class="level3">
 
@@ -183,7 +217,7 @@ service_ptr_t&lt;myservice_v2&gt; ptr_ex;
 <span class="kw1">if</span> <span class="br0">&#40;</span>ptr-&gt;service_query_t<span class="br0">&#40;</span>ptr_ex<span class="br0">&#41;</span><span class="br0">&#41;</span> <span class="br0">&#123;</span> <span class="coMULTI">/* ptr_ex is a valid pointer to myservice_v2 interface of our myservice instance */</span> <span class="br0">&#40;</span>...<span class="br0">&#41;</span> <span class="br0">&#125;</span>
 <span class="kw1">else</span> <span class="br0">&#123;</span><span class="coMULTI">/* this myservice implementation does not implement myservice_v2 */</span> <span class="br0">&#40;</span>...<span class="br0">&#41;</span> <span class="br0">&#125;</span></pre>
 </div>
-<!-- SECTION "Service extensions" [7128-8067] -->
+<!-- SECTION "Service extensions" [7809-8748] -->
 <h3><a name="autopointer_template_use" id="autopointer_template_use">Autopointer template use</a></h3>
 <div class="level3">
 
@@ -192,7 +226,7 @@ service_ptr_t&lt;myservice_v2&gt; ptr_ex;
 </p>
 
 </div>
-<!-- SECTION "Autopointer template use" [8068-8572] -->
+<!-- SECTION "Autopointer template use" [8749-9253] -->
 <h3><a name="exception_use" id="exception_use">Exception use</a></h3>
 <div class="level3">
 
@@ -209,7 +243,7 @@ Implementations of global callback services such as <code>playlist_callback</cod
 </p>
 
 </div>
-<!-- SECTION "Exception use" [8573-9590] -->
+<!-- SECTION "Exception use" [9254-10271] -->
 <h3><a name="storing_configuration" id="storing_configuration">Storing configuration</a></h3>
 <div class="level3">
 
@@ -226,7 +260,7 @@ Note that <code>cfg_var</code> objects can only be instantiated statically (eith
 </p>
 
 </div>
-<!-- SECTION "Storing configuration" [9591-10526] -->
+<!-- SECTION "Storing configuration" [10272-11207] -->
 <h3><a name="use_of_global_callback_services" id="use_of_global_callback_services">Use of global callback services</a></h3>
 <div class="level3">
 
@@ -276,7 +310,7 @@ You should also avoid firing a cross-thread SendMessage() inside global callback
 </p>
 
 </div>
-<!-- SECTION "Use of global callback services" [10527-12948] -->
+<!-- SECTION "Use of global callback services" [11208-13629] -->
 <h2><a name="service_class_design_guidelines_advanced" id="service_class_design_guidelines_advanced">Service class design guidelines (advanced)</a></h2>
 <div class="level2">
 
@@ -285,7 +319,7 @@ You should also avoid firing a cross-thread SendMessage() inside global callback
 </p>
 
 </div>
-<!-- SECTION "Service class design guidelines (advanced)" [12949-13285] -->
+<!-- SECTION "Service class design guidelines (advanced)" [13630-13966] -->
 <h3><a name="cross-dll_safety" id="cross-dll_safety">Cross-DLL safety</a></h3>
 <div class="level3">
 
@@ -294,7 +328,7 @@ You should also avoid firing a cross-thread SendMessage() inside global callback
 </p>
 
 </div>
-<!-- SECTION "Cross-DLL safety" [13286-14113] -->
+<!-- SECTION "Cross-DLL safety" [13967-14794] -->
 <h3><a name="entrypoint_service_efficiency" id="entrypoint_service_efficiency">Entrypoint service efficiency</a></h3>
 <div class="level3">
 
@@ -361,6 +395,6 @@ service_ptr_t&lt;myservice_instance&gt; findservice<span class="br0">&#40;</span
 	throw exception_io_data<span class="br0">&#40;</span><span class="br0">&#41;</span>;
 <span class="br0">&#125;</span></pre>
 </div>
-<!-- SECTION "Entrypoint service efficiency" [14114-] --></div>
+<!-- SECTION "Entrypoint service efficiency" [14795-] --></div>
 </body>
 </html>

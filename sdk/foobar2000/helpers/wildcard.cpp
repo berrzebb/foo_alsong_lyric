@@ -42,3 +42,9 @@ bool wildcard_helper::test(const char * fn,const char * pattern,bool b_sep)
 }
 
 bool wildcard_helper::has_wildcards(const char * str) {return strchr(str,'*') || strchr(str,'?');}
+
+const char * wildcard_helper::get_wildcard_list() {return "*?";}
+
+bool wildcard_helper::is_wildcard(char c) {
+	return c == '*' || c == '?';
+}

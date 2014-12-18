@@ -2,11 +2,11 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{cd095c87-49af-46c9-af39-7f13dac908fd}</UniqueIdentifier>
+      <UniqueIdentifier>{f9bf58c4-374f-49a5-94db-1f5ae50beca1}</UniqueIdentifier>
       <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
     </Filter>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{d54a2d6d-c3ab-4b0a-92ac-01943e52858c}</UniqueIdentifier>
+      <UniqueIdentifier>{07b1c50a-a3ad-4711-9ae0-d1411b80fd7a}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
   </ItemGroup>
@@ -45,9 +45,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="file_move_helper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="file_wrapper_simple.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="filetimetools.cpp">
@@ -95,11 +92,11 @@
     <ClCompile Include="window_placement_helper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="file_win32_wrapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="album_art_helpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="bitreader_helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -149,9 +146,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="file_win32_wrapper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="file_wrapper_simple.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="filetimetools.h">
@@ -218,6 +212,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="window_placement_helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fullFileBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPowerRequest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

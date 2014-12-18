@@ -59,7 +59,7 @@ private:
 BOOL CMyPreferences::OnInitDialog(CWindow, LPARAM) {
 	SetDlgItemInt(IDC_BOGO1, cfg_bogoSetting1, FALSE);
 	SetDlgItemInt(IDC_BOGO2, cfg_bogoSetting2, FALSE);
-	return TRUE;
+	return FALSE;
 }
 
 void CMyPreferences::OnEditChange(UINT, int, CWindow) {

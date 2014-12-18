@@ -8,7 +8,9 @@
 #endif
 
 // #define FOOBAR2000_TARGET_VERSION 75 // 0.9.6
-#define FOOBAR2000_TARGET_VERSION 76 // 1.0
+// #define FOOBAR2000_TARGET_VERSION 76 // 1.0
+//#define FOOBAR2000_TARGET_VERSION 77 // 1.1
+#define FOOBAR2000_TARGET_VERSION 78 // 1.2.7
 
 #include "../../pfc/pfc.h"
 
@@ -42,6 +44,7 @@ typedef const char * pcchar;
 #include "playable_location.h"
 #include "file_info.h"
 #include "file_info_impl.h"
+#include "hasher_md5.h"
 #include "metadb_handle.h"
 #include "metadb.h"
 #include "console.h"
@@ -51,6 +54,7 @@ typedef const char * pcchar;
 #include "event_logger.h"
 #include "input.h"
 #include "input_impl.h"
+#include "decode_postprocessor.h"
 #include "menu.h"
 #include "contextmenu.h"
 #include "contextmenu_manager.h"
@@ -78,7 +82,6 @@ typedef const char * pcchar;
 #include "config_object.h"
 #include "config_object_impl.h"
 #include "threaded_process.h"
-#include "hasher_md5.h"
 #include "message_loop.h"
 #include "input_file_type.h"
 #include "chapterizer.h"
@@ -89,6 +92,7 @@ typedef const char * pcchar;
 #include "track_property.h"
 
 #include "album_art.h"
+#include "album_art_helpers.h"
 #include "icon_remap.h"
 #include "ui_element.h"
 #include "ole_interaction.h"
@@ -101,5 +105,9 @@ typedef const char * pcchar;
 #include "playback_stream_capture.h"
 #include "http_client.h"
 #include "exceptions.h"
+
+#include "progress_meter.h"
+
+#include "output.h"
 
 #endif //_FOOBAR2000_H_

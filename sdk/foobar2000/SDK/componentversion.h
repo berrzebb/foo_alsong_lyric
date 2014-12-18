@@ -9,7 +9,7 @@ public:
 	FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(componentversion);
 };
 
-//! Implementation helper.
+//! Implementation helper. You typically want to use DECLARE_COMPONENT_VERSION() instead.
 class componentversion_impl_simple : public componentversion {
 	const char * name,*version,*about;
 public:
@@ -21,7 +21,7 @@ public:
 	explicit componentversion_impl_simple(const char * p_name,const char * p_version,const char * p_about) : name(p_name), version(p_version), about(p_about ? p_about : "") {}
 };
 
-//! Implementation helper.
+//! Implementation helper. You typically want to use DECLARE_COMPONENT_VERSION() instead.
 class componentversion_impl_copy : public componentversion {
 	pfc::string8 name,version,about;
 public:
@@ -46,8 +46,12 @@ public:
 	componentversion_impl_copy_factory(const char * p_name,const char * p_version,const char * p_about) : __componentversion_impl_copy_factory(p_name,p_version,p_about) {}
 };
 
-//! Use this to declare your component's version information. Parameters must ba plain const char * string constants. The ABOUT string can be NULL if you don't provide any information to show in the "About" dialog. \n
-//! Example: DECLARE_COMPONENT_VERSION("blah","v1.337","")
+//! Use this to declare your component's version information. Parameters must ba plain const char * string constants. \n
+//! You should have only one DECLARE_COMPONENT_VERSION() per component DLL. Having more than one will confuse component updater's version matching. \n
+//! Please keep your version numbers formatted as: N[.N[.N....]][ alpha|beta|RC[ N[.N...]] \n
+//! Sample version numbers, in ascending order: 0.9 < 0.10 < 1.0 alpha 1 < 1.0 alpha 2 < 1.0 beta 1 < 1.0 RC < 1.0 RC1 < 1.0 < 1.1 < 1.10 \n
+//! For a working sample of how foobar2000 sorts version numbers, see http://www.foobar2000.org/versionator.php \n
+//! Example: DECLARE_COMPONENT_VERSION("blah","1.3.3.7","")
 #define DECLARE_COMPONENT_VERSION(NAME,VERSION,ABOUT) \
 	namespace {class componentversion_myimpl : public componentversion { public: componentversion_myimpl() {PFC_ASSERT( ABOUT );} \
 		void get_file_name(pfc::string_base & out) {out = core_api::get_my_file_name();}	\
@@ -68,6 +72,9 @@ class component_installation_validator : public service_base {
 public:
 	virtual bool is_installed_correctly() = 0;
 
+	static bool test_my_name(const char * fn);
+	static bool have_other_file(const char * fn);
+
 	FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(component_installation_validator)
 };
 
@@ -76,11 +83,7 @@ class component_installation_validator_filename : public component_installation_
 public:
 	component_installation_validator_filename(const char * dllName) : m_dllName(dllName) {}
 	bool is_installed_correctly() {
-		const char * path = core_api::get_my_full_path();
-		path += pfc::scan_filename(path);
-		bool retVal = ( strcmp(path, m_dllName) == 0 );
-		PFC_ASSERT( retVal );
-		return retVal;
+		return test_my_name(m_dllName);
 	}
 private:
 	const char * const m_dllName;

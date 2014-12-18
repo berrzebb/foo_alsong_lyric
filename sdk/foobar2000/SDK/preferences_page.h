@@ -2,7 +2,7 @@
 //! In 1.0 and newer you should always derive from preferences_page_v3 rather than from preferences_page directly.
 class NOVTABLE preferences_page : public service_base {
 public:
-	//! Creates preferences page dialog window. It is safe to assume that two dialog instances will never coexist. Caller is responsible for embedding it into preferences dialog itself.
+	//! Obsolete.
 	virtual HWND create(HWND p_parent) = 0;
 	//! Retrieves name of the prefernces page to be displayed in preferences tree (static string).
 	virtual const char * get_name() = 0;
@@ -89,6 +89,12 @@ public:
 		needs_restart = 2,
 		needs_restart_playback = 4,
 		resettable = 8,
+
+		//! \since 1.1
+		//! Indicates that the dialog is currently busy and cannot be applied or cancelled. Do not use without a good reason! \n
+		//! This flag was introduced in 1.1. It will not be respected in earlier foobar2000 versions. It is recommended not to use this flag unless you are absolutely sure that you need it and take appropriate precautions. \n
+		//! Note that this has no power to entirely prevent your preferences page from being destroyed/cancelled as a result of app shutdown if the user dismisses the warnings, but you won't be getting an "apply" call while this is set.
+		busy = 16,
 	};
 };
 
@@ -101,7 +107,9 @@ public:
 //! \since 1.0
 //! Implements a preferences page instance. \n
 //! Instantiated through preferences_page_v3::instantiate(). \n
-//! Note that the window will be destroyed by the caller before the last reference to the preferences_page_instance is released, so you don't need special workarounds to ensure that the object doesn't get deleted while the window is still active - use simple service_impl_t<> when creating your instances.
+//! Note that the window will be destroyed by the caller before the last reference to the preferences_page_instance is released. \n
+//! WARNING: misguided use of modal dialogs - or ANY windows APIs that might spawn such dialogs - may result in conditions when the owner dialog (along with your page) is destroyed somewhere inside your message handler, also releasing references to your object. \n
+//! It is recommended to use window_service_impl_t<> from ATLHelpers to instantiate preferences_page_instances, or preferences_page_impl<> framework for your preferences_page code to cleanly workaround such cases.
 class preferences_page_instance : public service_base {
 	FB2K_MAKE_SERVICE_INTERFACE(preferences_page_instance, service_base)
 public:

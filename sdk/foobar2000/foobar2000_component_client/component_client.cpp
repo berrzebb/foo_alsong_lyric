@@ -75,7 +75,7 @@ namespace core_api
 }
 
 namespace {
-	class foobar2000_client_impl : public foobar2000_client
+	class foobar2000_client_impl : public foobar2000_client, private foobar2000_component_globals
 	{
 	public:
 		t_uint32 get_version() {return FOOBAR2000_CLIENT_VERSION;}

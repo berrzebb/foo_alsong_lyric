@@ -2,11 +2,11 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Header Files">
-      <UniqueIdentifier>{edee64ce-79a0-4399-9050-4f64cc2c112e}</UniqueIdentifier>
+      <UniqueIdentifier>{6c35c7a7-723a-401f-acdc-c63af942abae}</UniqueIdentifier>
       <Extensions>*.h</Extensions>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{644a6387-442c-47e2-a2b3-31d87d2471e4}</UniqueIdentifier>
+      <UniqueIdentifier>{3b2ccd60-8f0c-4241-830a-fda069a5d440}</UniqueIdentifier>
       <Extensions>*.cpp</Extensions>
     </Filter>
   </ItemGroup>
@@ -72,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="coreversion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="decode_postprocessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dsp.h">
@@ -239,6 +242,15 @@
     <ClInclude Include="vis.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="progress_meter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="album_art_helpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="output.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="abort_callback.cpp">
@@ -389,6 +401,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ui_element.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="componentversion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="search_tools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="file_cached_impl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
