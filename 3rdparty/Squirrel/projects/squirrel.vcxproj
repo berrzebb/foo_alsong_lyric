@@ -54,9 +54,6 @@
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectName)</TargetName>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <TargetName>$(ProjectName)</TargetName>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -258,6 +255,12 @@
     <ClInclude Include="..\squirrel\squserdata.h" />
     <ClInclude Include="..\squirrel\squtils.h" />
     <ClInclude Include="..\squirrel\sqvm.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="sqstdlib.vcxproj">
+      <Project>{21ffcf49-0d09-41d3-8a04-f47a0890f27a}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

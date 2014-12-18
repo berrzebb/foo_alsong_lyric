@@ -28,11 +28,11 @@ SQSharedState::SQSharedState()
 }
 
 #define newsysstring(s) {	\
-	_systemstrings->emplace_back(SQString::Create(this,s));	\
+	_systemstrings->push_back(SQString::Create(this,s));	\
 	}
 
 #define newmetamethod(s) {	\
-	_metamethods->emplace_back(SQString::Create(this,s));	\
+	_metamethods->push_back(SQString::Create(this,s));	\
 	_table(_metamethodsmap)->NewSlot(_metamethods->back(),(SQInteger)(_metamethods->size()-1)); \
 	}
 
@@ -60,7 +60,7 @@ bool CompileTypemask(SQIntVec &res,const SQChar *typemask)
 				case 'x': mask |= _RT_INSTANCE; break;
 				case 'y': mask |= _RT_CLASS; break;
 				case 'r': mask |= _RT_WEAKREF; break;
-				case '.': mask = -1; res.emplace_back(mask); i++; mask = 0; continue;
+				case '.': mask = -1; res.push_back(mask); i++; mask = 0; continue;
 				case ' ': i++; continue; //ignores spaces
 				default:
 					return false;
@@ -72,7 +72,7 @@ bool CompileTypemask(SQIntVec &res,const SQChar *typemask)
 				return false;
 			continue; 
 		}
-		res.emplace_back(mask);
+		res.push_back(mask);
 		mask = 0;
 		
 	}

@@ -153,7 +153,7 @@ DWORD LyricSourceLRC::Save(const metadb_handle_ptr &track, Lyric &lyric)
 			CHAR mbstr[512];
 			int len = WideCharToMultiByte(949, NULL, wstr.c_str(), -1, mbstr, 512, NULL, NULL);
 			mbstr[len] = 0;
-			WriteFile(hf, mbstr, len, &unused, NULL);
+			WriteFile(hf, mbstr, len - 1, &unused, NULL);
 		}
 	}
 

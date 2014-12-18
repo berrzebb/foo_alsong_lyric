@@ -63,7 +63,7 @@ public:
 	}
 	void Resize(SQInteger size,SQObjectPtr &fill) { _values.resize(size,fill); ShrinkIfNeeded(); }
 	void Reserve(SQInteger size) { _values.reserve(size); }
-	void Append(const SQObject &o){_values.emplace_back(o);}
+	void Append(const SQObject &o){_values.push_back(o);}
 	void Extend(const SQArray *a);
 	SQObjectPtr &Top(){return _values.top();}
 	void Pop(){_values.pop_back(); ShrinkIfNeeded(); }

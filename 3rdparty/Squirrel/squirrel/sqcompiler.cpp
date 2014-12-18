@@ -61,7 +61,7 @@ struct SQScope {
 
 #define BEGIN_BREAKBLE_BLOCK()	SQInteger __nbreaks__=_fs->_unresolvedbreaks.size(); \
 							SQInteger __ncontinues__=_fs->_unresolvedcontinues.size(); \
-							_fs->_breaktargets.emplace_back(0);_fs->_continuetargets.emplace_back(0);
+							_fs->_breaktargets.push_back(0);_fs->_continuetargets.push_back(0);
 
 #define END_BREAKBLE_BLOCK(continue_target) {__nbreaks__=_fs->_unresolvedbreaks.size()-__nbreaks__; \
 					__ncontinues__=_fs->_unresolvedcontinues.size()-__ncontinues__; \
@@ -251,7 +251,7 @@ public:
 			}
 			RESOLVE_OUTERS();
 			_fs->AddInstruction(_OP_JMP, 0, -1234);
-			_fs->_unresolvedbreaks.emplace_back(_fs->GetCurrentPos());
+			_fs->_unresolvedbreaks.push_back(_fs->GetCurrentPos());
 			Lex();
 			break;
 		case TK_CONTINUE:
@@ -261,7 +261,7 @@ public:
 			}
 			RESOLVE_OUTERS();
 			_fs->AddInstruction(_OP_JMP, 0, -1234);
-			_fs->_unresolvedcontinues.emplace_back(_fs->GetCurrentPos());
+			_fs->_unresolvedcontinues.push_back(_fs->GetCurrentPos());
 			Lex();
 			break;
 		case TK_FUNCTION:
@@ -1106,7 +1106,7 @@ public:
 		SQInstructionVec exp;
 		if(expsize > 0) {
 			for(SQInteger i = 0; i < expsize; i++)
-				exp.emplace_back(_fs->GetInstruction(expstart + i));
+				exp.push_back(_fs->GetInstruction(expstart + i));
 			_fs->PopInstructions(expsize);
 		}
 		BEGIN_BREAKBLE_BLOCK()
@@ -1173,7 +1173,7 @@ public:
 		SQInteger tonextcondjmp = -1;
 		SQInteger skipcondjmp = -1;
 		SQInteger __nbreaks__ = _fs->_unresolvedbreaks.size();
-		_fs->_breaktargets.emplace_back(0);
+		_fs->_breaktargets.push_back(0);
 		while(_token == TK_CASE) {
 			if(!bfirst) {
 				_fs->AddInstruction(_OP_JMP, 0, 0);
@@ -1485,7 +1485,7 @@ public:
 		funcstate->Dump(func);
 #endif
 		_fs = currchunk;
-		_fs->_functions.emplace_back(func);
+		_fs->_functions.push_back(func);
 		_fs->PopChildState();
 	}
 	void ResolveBreaks(SQFuncState *funcstate, SQInteger ntoresolve)

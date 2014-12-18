@@ -16,3 +16,9 @@ src/_UpgradeReport_Files/UpgradeReport.css
 src/_UpgradeReport_Files/UpgradeReport.xslt
 src/_UpgradeReport_Files/UpgradeReport_Minus.gif
 src/UpgradeLog.XML
+*.ipch
+*.cod
+*.dll
+*.exp
+*.htm
+*.ilk

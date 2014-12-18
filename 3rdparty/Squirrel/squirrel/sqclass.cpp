@@ -83,7 +83,7 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 				SQClassMember m;
 				m.val = theval;
 				_members->NewSlot(key,SQObjectPtr(_make_method_idx(_methods.size())));
-				_methods.emplace_back(m);
+				_methods.push_back(m);
 			}
 			else {
 				_methods[_member_idx(temp)].val = theval;
@@ -94,7 +94,7 @@ bool SQClass::NewSlot(SQSharedState *ss,const SQObjectPtr &key,const SQObjectPtr
 	SQClassMember m;
 	m.val = val;
 	_members->NewSlot(key,SQObjectPtr(_make_field_idx(_defaultvalues.size())));
-	_defaultvalues.emplace_back(m);
+	_defaultvalues.push_back(m);
 	return true;
 }
 

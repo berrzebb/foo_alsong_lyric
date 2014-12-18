@@ -82,7 +82,7 @@ public:
 	}
 	int GetFontTransparency()
 	{
-		return fontTransparency;
+		return (fontTransparency == 100) ? 99 : fontTransparency;
 	}
 	UIFontDescription OpenFontPopup(HWND hWndFrom, const UIFontDescription &tmpl)
 	{
@@ -162,6 +162,7 @@ public:
 		LineMargin = 100;
 		VerticalAlign = ALIGN_MODDLE;
 		HorizentalAlign = ALIGN_MODDLE;
+		fontTransparency = 100;
 
 		lstrcpy(normalFont.face, TEXT("돋움체"));
 		normalFont.bold = 0;
