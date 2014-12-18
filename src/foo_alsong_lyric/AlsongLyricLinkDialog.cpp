@@ -205,7 +205,6 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 					m_searchlistthread.reset();
 					}
 					m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
-
 					SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) | WS_DISABLED);
 					if(m_lyriccount > 100)
 						SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) & ~WS_DISABLED);
@@ -242,7 +241,12 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 					str << m_page * 100 + 1 << "~" << min(m_lyriccount, (m_page + 1) * 100) << "/" << m_lyriccount;
 					uSetDlgItemText(m_hWnd, IDC_STATUS, str.str().c_str());
 					m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), 0);
-					PopulateListView();
+					if(m_searchlistthread){
+					m_searchlistthread->interrupt();
+					m_searchlistthread->join();
+					m_searchlistthread.reset();
+					}
+					m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
 					if(m_page != 0)
 						SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) & ~WS_DISABLED);
 					else
@@ -266,7 +270,12 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 					str << m_page * 100 + 1 << "~" << min(m_lyriccount, (m_page + 1) * 100) << "/" << m_lyriccount;
 					uSetDlgItemText(m_hWnd, IDC_STATUS, str.str().c_str());
 					m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), 0);
-					PopulateListView();
+					if(m_searchlistthread){
+					m_searchlistthread->interrupt();
+					m_searchlistthread->join();
+					m_searchlistthread.reset();
+					}
+					m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
 
 					if(m_page != 0)
 						SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) & ~WS_DISABLED);
