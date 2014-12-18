@@ -101,7 +101,7 @@ namespace columns_ui
 			for (n=0;n<count;n++)
 			{
 				const char * ptr = get_item(n)->get_name();
-				if (!stricmp_utf8_ex(p_name,length,ptr,infinite))
+				if (!stricmp_utf8_ex(p_name,length,ptr,pfc_infinite))
 					return get_item(n)->get_value();
 			}
 			return 0;
