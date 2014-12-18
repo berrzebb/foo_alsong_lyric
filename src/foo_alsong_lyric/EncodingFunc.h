@@ -33,18 +33,18 @@ public:
 			{ //no surrogate pair
 				if(utf16[i] < 0x80) //1 byte
 				{
-					ret.push_back((char)utf16[i]);
+					ret.emplace_back((char)utf16[i]);
 				}
 				else if(utf16[i] < 0x800)
 				{
-					ret.push_back((char)(0xC0 | ((utf16[i] & 0x7C0) >> 6)));
-					ret.push_back((char)(0x80 | (utf16[i] & 0x3F)));
+					ret.emplace_back((char)(0xC0 | ((utf16[i] & 0x7C0) >> 6)));
+					ret.emplace_back((char)(0x80 | (utf16[i] & 0x3F)));
 				}
 				else
 				{
-					ret.push_back((char)(0xE0 | ((utf16[i] & 0xF000) >> 12)));
-					ret.push_back((char)(0x80 | ((utf16[i] & 0xFC0) >> 6)));
-					ret.push_back((char)(0x80 | (utf16[i] & 0x3F)));
+					ret.emplace_back((char)(0xE0 | ((utf16[i] & 0xF000) >> 12)));
+					ret.emplace_back((char)(0x80 | ((utf16[i] & 0xFC0) >> 6)));
+					ret.emplace_back((char)(0x80 | (utf16[i] & 0x3F)));
 				}
 			}
 			else
@@ -54,25 +54,25 @@ public:
 				temp += 0x10000;
 				if(temp < 0x80) //1 byte
 				{
-					ret.push_back((char)temp);
+					ret.emplace_back((char)temp);
 				}
 				else if(temp < 0x800)
 				{
-					ret.push_back((char)(0xC0 | ((temp & 0x7C0) >> 6)));
-					ret.push_back((char)(0x80 | (temp & 0x3F)));
+					ret.emplace_back((char)(0xC0 | ((temp & 0x7C0) >> 6)));
+					ret.emplace_back((char)(0x80 | (temp & 0x3F)));
 				}
 				else if(temp < 0x10000)
 				{
-					ret.push_back((char)(0xE0 | ((temp & 0xF000) >> 12)));
-					ret.push_back((char)(0x80 | ((temp & 0xFC0) >> 6)));
-					ret.push_back((char)(0x80 | (temp & 0x3F)));
+					ret.emplace_back((char)(0xE0 | ((temp & 0xF000) >> 12)));
+					ret.emplace_back((char)(0x80 | ((temp & 0xFC0) >> 6)));
+					ret.emplace_back((char)(0x80 | (temp & 0x3F)));
 				}
 				else
 				{
-					ret.push_back((char)(0xF0 | ((temp & 0x1C0000) >> 18)));
-					ret.push_back((char)(0x80 | ((temp & 0x3F000) >> 12)));
-					ret.push_back((char)(0x80 | ((temp & 0xFC0) >> 6)));
-					ret.push_back((char)(0x80 | (temp & 0x3F)));
+					ret.emplace_back((char)(0xF0 | ((temp & 0x1C0000) >> 18)));
+					ret.emplace_back((char)(0x80 | ((temp & 0x3F000) >> 12)));
+					ret.emplace_back((char)(0x80 | ((temp & 0xFC0) >> 6)));
+					ret.emplace_back((char)(0x80 | (temp & 0x3F)));
 				}
 				i ++;
 			}

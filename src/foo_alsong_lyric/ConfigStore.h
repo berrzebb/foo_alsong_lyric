@@ -42,7 +42,7 @@ public:
 
 	void add(const GUID &guid)
 	{
-		m_reallist.push_back(guid);
+		m_reallist.emplace_back(guid);
 	}
 
 	std::vector<GUID> get_value()
