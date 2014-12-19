@@ -45,8 +45,3 @@ Lyric *LyricSearchResultAlsong::Get(int id)
 	else
 		return dynamic_cast<Lyric *>(&m_LyricResultMap.find(-1)->second);
 }
-
-const int LyricSearchResultAlsong::Count()
-{
-	return m_LyricResultMap.size();
-}
