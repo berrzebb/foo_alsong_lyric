@@ -23,7 +23,7 @@
 #include "SoapHelper.h"
 #include "AlsongLyric.h"
 
-#define ALSONG_VERSION "2.11"
+#define ALSONG_VERSION "3.02"
 
 DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 {	

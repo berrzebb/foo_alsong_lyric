@@ -23,5 +23,6 @@ class LyricSearchResult
 {
 public:
 	virtual Lyric *Get() = 0;
+	virtual const int Count() = 0;
 	virtual Lyric *Get(int id) = 0;
 };
