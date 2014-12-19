@@ -372,27 +372,32 @@ DWORD LyricManager::FetchLyric(const metadb_handle_ptr &track)
 	m_CurrentLyric = res.second;
 	if(!m_CurrentLyric || !m_CurrentLyric->HasLyric())
 	{
-		service_ptr_t<titleformat_object> to;
-		pfc::string8 title;
-		pfc::string8 artist;
-		pfc::string8 album;
-
-		static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%title%");
-		track->format_title(NULL, title, to, NULL);
-		static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%artist%");
-		track->format_title(NULL, artist, to, NULL);
-		static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%album%");
-		track->format_title(NULL, album, to, NULL);
-
 		pfc::stringcvt::string_wide_from_utf8_fast Status;
-		Status.append(pfc::stringcvt::string_utf8_from_wide(L"제목 : "));
-		Status.append(title.get_ptr());
-		Status.append(pfc::stringcvt::string_utf8_from_wide(L"\r\n 아티스트 : "));
-		Status.append(artist.get_ptr());
-		Status.append(pfc::stringcvt::string_utf8_from_wide(L"\r\n 앨범 : "));
-		Status.append(album.get_ptr());
+		std::wstring wBuf;
+		if(cfg_outer_nonlyric){
+			wBuf = ((UIPreference)cfg_outer).GetNonLyricText();
+		}else{
+			service_ptr_t<titleformat_object> to;
+			pfc::string8 title;
+			pfc::string8 artist;
+			pfc::string8 album;
 
-		m_Status = std::string(pfc::stringcvt::string_utf8_from_wide(Status.get_ptr()));
+			static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%title%");
+			track->format_title(NULL, title, to, NULL);
+			static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%artist%");
+			track->format_title(NULL, artist, to, NULL);
+			static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%album%");
+			track->format_title(NULL, album, to, NULL);
+
+			Status.append(pfc::stringcvt::string_utf8_from_wide(L"제목 : "));
+			Status.append(title.get_ptr());
+			Status.append(pfc::stringcvt::string_utf8_from_wide(L"\r\n 아티스트 : "));
+			Status.append(artist.get_ptr());
+			Status.append(pfc::stringcvt::string_utf8_from_wide(L"\r\n 앨범 : "));
+			Status.append(album.get_ptr());
+			wBuf = Status.get_ptr();
+		}
+		m_Status = std::string(pfc::stringcvt::string_utf8_from_wide(wBuf.c_str()));
 		RedrawHandler();
 		return false;
 	}

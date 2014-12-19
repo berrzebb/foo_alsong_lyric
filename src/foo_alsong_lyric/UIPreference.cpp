@@ -582,7 +582,7 @@ BOOL UIPreference::UIConfigProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM 
 	static bool old_layered;
 	static bool old_nolayered;
 	static bool old_topmost;
-
+	static bool old_nonlyric;
 	static UIPreference newSetting;
 	static int shouldClose;
 
@@ -596,7 +596,7 @@ BOOL UIPreference::UIConfigProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM 
 			old_layered = cfg_outer_layered;
 			old_topmost = cfg_outer_topmost;
 			old_nolayered = cfg_outer_nolayered;
-
+			old_nonlyric = cfg_outer_nonlyric;
 			SendMessage(GetDlgItem(hWnd, IDC_NLINESPIN), UDM_SETRANGE32, 1, 20);
 			SendMessage(GetDlgItem(hWnd, IDC_NLINESPIN), UDM_SETBUDDY, (WPARAM)GetDlgItem(hWnd, IDC_NLINE), 0);
 			SendMessage(GetDlgItem(hWnd, IDC_NLINESPIN), UDM_SETPOS32, 0, GetnLine());
@@ -610,7 +610,7 @@ BOOL UIPreference::UIConfigProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM 
 			SendMessage(GetDlgItem(hWnd, IDC_OUTLINEBORDERSPIN), UDM_SETRANGE32, 0, 20);
 			SendMessage(GetDlgItem(hWnd, IDC_OUTLINEBORDERSPIN), UDM_SETBUDDY, (WPARAM)GetDlgItem(hWnd, IDC_OUTLINEBORDER), 0);
 			SendMessage(GetDlgItem(hWnd, IDC_OUTLINEBORDERSPIN), UDM_SETPOS32, 0, outLineSize);
-
+			SendMessage(GetDlgItem(hWnd, IDC_NONLYRICTEXT),WM_SETTEXT,NULL,(LPARAM)newSetting.GetNonLyricText());
 //			if(Setting->Script)
 //				uSetDlgItemText(hWnd, IDC_UISCRIPT, Setting->Script->get_ptr());
 			if(GetParent(hParent) == NULL)
@@ -632,6 +632,7 @@ BOOL UIPreference::UIConfigProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM 
 				CheckDlgButton(hWnd, IDC_NOLAYERED, cfg_outer_nolayered);
 				CheckDlgButton(hWnd, IDC_TOPMOST, cfg_outer_topmost);
 				CheckDlgButton(hWnd, IDC_OUTER_BLUR, cfg_outer_blur);
+				CheckDlgButton(hWnd, IDC_NONLYRICTEXTCHK, cfg_outer_nonlyric);
 				HMODULE dwm = LoadLibrary(TEXT("dwmapi.dll"));
 				if(dwm)
 				{
@@ -656,8 +657,10 @@ BOOL UIPreference::UIConfigProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM 
 				SendMessage(GetDlgItem(hWnd, IDC_NOLAYERED), WM_CLOSE, 0, 0);
 				SendMessage(GetDlgItem(hWnd, IDC_TOPMOST), WM_CLOSE, 0, 0);
 				SendMessage(GetDlgItem(hWnd, IDC_OUTER_BLUR), WM_CLOSE, 0, 0);
+				SendMessage(GetDlgItem(hWnd, IDC_NONLYRICTEXTCHK), WM_CLOSE, 0, 0);
 				SendMessage(GetDlgItem(hWnd, IDC_RESETWNDPOS), WM_CLOSE, 0, 0);
 				SendMessage(GetDlgItem(hWnd, IDC_TRANSPARENCYNOTICE), WM_CLOSE, 0, 0);
+
 			}
 
 			SendMessage(GetDlgItem(hWnd, IDC_VERTICALALIGN), CB_ADDSTRING, NULL, (LPARAM)TEXT("위"));
@@ -729,6 +732,7 @@ BOOL UIPreference::UIConfigProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM 
 	case WM_COMMAND:
 		if(HIWORD(wParam) == EN_CHANGE || HIWORD(wParam) == BN_CLICKED || HIWORD(wParam) == CBN_SELCHANGE)
 			SendMessage(GetParent(hWnd), PSM_CHANGED, (WPARAM)hWnd, 0);
+			
 		if(HIWORD(wParam) == BN_CLICKED)
 		{
 			switch(LOWORD(wParam))
@@ -777,12 +781,15 @@ BOOL UIPreference::UIConfigProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM 
 				cfg_outer_nolayered = (IsDlgButtonChecked(hWnd, IDC_NOLAYERED) ? true : false);
 				cfg_outer_topmost = (IsDlgButtonChecked(hWnd, IDC_TOPMOST) ? true : false);
 				cfg_outer_blur = (IsDlgButtonChecked(hWnd, IDC_OUTER_BLUR) ? true : false);
+				cfg_outer_nonlyric = (IsDlgButtonChecked(hWnd, IDC_NONLYRICTEXTCHK) ? true : false);
+
 				WndInstance.StyleUpdated();
 			}
 
 			VerticalAlign = static_cast<AlignPosition>(SendMessage(GetDlgItem(hWnd, IDC_VERTICALALIGN), CB_GETCURSEL, NULL, NULL) + 1);
 			HorizentalAlign = static_cast<AlignPosition>(SendMessage(GetDlgItem(hWnd, IDC_HORIZENTALALIGN), CB_GETCURSEL, NULL, NULL) + 1);
 			bgType = static_cast<BgType>(SendMessage(GetDlgItem(hWnd, IDC_BGTYPE), CB_GETCURSEL, NULL, NULL));
+			GetWindowText(GetDlgItem(hWnd,IDC_NONLYRICTEXT),newSetting.nonlyrictext,128);
 //			if(Setting->Script)
 //				uGetDlgItemText(hWnd, IDC_UISCRIPT, *(Setting->Script));
 
@@ -810,6 +817,7 @@ BOOL UIPreference::UIConfigProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM 
 				cfg_outer_layered = old_layered;
 				cfg_outer_nolayered = old_nolayered;
 				cfg_outer_topmost = old_topmost;
+				cfg_outer_nonlyric = old_nonlyric;
 				WndInstance.StyleUpdated();
 			}
 			//DestroyWindow(((LPNMHDR)lParam)->hwndFrom);

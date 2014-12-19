@@ -38,6 +38,10 @@ const GUID guid_cfg_outer_layered = // {F2CC0F3A-735F-46b9-8FA2-6B8313A69B2C}
 { 0xf2cc0f3a, 0x735f, 0x46b9, { 0x8f, 0xa2, 0x6b, 0x83, 0x13, 0xa6, 0x9b, 0x2c } };
 cfg_bool cfg_outer_layered(guid_cfg_outer_layered, false);
 
+const GUID guid_cfg_outer_nonlyric = // {85BF85AB-6B1A-48F2-84BF-A47975C6BF2B}
+{ 0x85bf85ab, 0x6b1a, 0x48f2, { 0x84, 0xbf, 0xa4, 0x79, 0x75, 0xc6, 0xbf, 0x2b } };
+cfg_bool cfg_outer_nonlyric(guid_cfg_outer_nonlyric, false);
+
 const GUID guid_cfg_outer_script = // {11F4AB00-D59F-4ded-B84B-6AD6751EAB13}
 { 0x11f4ab00, 0xd59f, 0x4ded, { 0xb8, 0x4b, 0x6a, 0xd6, 0x75, 0x1e, 0xab, 0x13 } };
 cfg_string cfg_outer_script(guid_cfg_outer_script, "");

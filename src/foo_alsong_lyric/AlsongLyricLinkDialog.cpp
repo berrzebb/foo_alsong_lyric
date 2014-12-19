@@ -160,7 +160,7 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 
 						pfc::string8 title;
 						uGetDlgItemText(m_hWnd, IDC_TITLE, title);
-
+						pfc::string8 tmp;
 
 						if(artist.get_length() == 0)
 						{
@@ -185,22 +185,23 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 							return TRUE;
 						}
 						/// 아티스트나 타이틀에 타이틀 포맷이 존재한다면?
-						if(!strcmp(artist.toString(),"%artist%"))
+						service_ptr_t<titleformat_object> to;
+						static_api_ptr_t<titleformat_compiler>()->compile_safe(to, artist.toString());
+						if(m_track->format_title(NULL,tmp,to,NULL))
 						{
-							service_ptr_t<titleformat_object> to;
-							static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%artist%");
-							m_track->format_title(NULL, artist, to, NULL);
-							uSetDlgItemText(m_hWnd, IDC_ARTIST, artist.get_ptr());
+							artist = tmp;
 						}
-						if(!strcmp(title.toString(),"%title%"))
+						static_api_ptr_t<titleformat_compiler>()->compile_safe(to, title.toString());
+						if(m_track->format_title(NULL,tmp,to,NULL))
 						{
-							service_ptr_t<titleformat_object> to;
-							static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%title%");
-							m_track->format_title(NULL, title, to, NULL);
-							uSetDlgItemText(m_hWnd, IDC_TITLE, title.get_ptr());
+							title = tmp;
 						}
+
+ 						uSetDlgItemText(m_hWnd, IDC_ARTIST, artist.get_ptr());
+ 						uSetDlgItemText(m_hWnd, IDC_TITLE, title.get_ptr());
+
 						m_page = 0;
-						uSetDlgItemText(m_hWnd, IDC_STATUS,pfc::string8("가사를 검색중입니다.").toString());
+						SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"가사를 검색중입니다.");
 						m_lyriccount = LyricSourceAlsong().SearchLyricGetCount(artist.toString(),title.toString());
 						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
 
@@ -239,7 +240,7 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 						uGetDlgItemText(m_hWnd, IDC_ARTIST, artist);
 						pfc::string8 title;
 						uGetDlgItemText(m_hWnd, IDC_TITLE, title);
-						uSetDlgItemText(m_hWnd, IDC_STATUS,pfc::string8("이전 페이지로 이동합니다.").toString());
+						SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"이전 페이지로 이동합니다.");
 						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
 						m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
 						if(m_page != 0)
@@ -264,7 +265,7 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 						pfc::string8 title;
 						uGetDlgItemText(m_hWnd, IDC_TITLE, title);
 
-						uSetDlgItemText(m_hWnd, IDC_STATUS,pfc::string8("다음 페이지로 이동합니다.").toString());
+						SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"다음 페이지로 이동합니다.");
 						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
 						m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
 

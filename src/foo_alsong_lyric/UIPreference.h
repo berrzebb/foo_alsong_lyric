@@ -60,6 +60,10 @@ public:
 	{
 		return bgImage;
 	}
+	WCHAR *GetNonLyricText()
+	{
+		return nonlyrictext;
+	}
 	int GetBgType()
 	{
 		return (int)bgType;
@@ -151,6 +155,11 @@ public:
 		}
 		return std::wstring();
 	}
+
+	void SetnonlyricText(WCHAR* text)
+	{
+		lstrcpy(nonlyrictext,text);
+	}
 	void SetDefault()
 	{
 		//oldFont = t_font_description::g_from_font((HFONT)GetStockObject(DEFAULT_GUI_FONT));
@@ -233,6 +242,7 @@ private:
 	COLORREF backColor;
 	COLORREF oldFontColor; //not used
 	WCHAR bgImage[MAX_PATH];
+	WCHAR nonlyrictext[128]; /// 가사 미확인 메시지
 	BgType bgType; //0: 색, 1: 이미지, 2:투명한 배경
 
 	DWORD nLine;
@@ -249,7 +259,7 @@ private:
 	uint32_t outLineSize;
 	COLORREF outLineColor;
 
-	BYTE bReserved[446]; //구조체 크기가 변하면 설정이 초기화된다. 나중에 변수 추가할때 여기서 뺄것
+	BYTE bReserved[318]; //구조체 크기가 변하면 설정이 초기화된다. 나중에 변수 추가할때 여기서 뺄것
 };
 
 DECLARE_INSTANCE_TYPE(UIPreference)
