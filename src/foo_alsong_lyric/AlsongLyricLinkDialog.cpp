@@ -129,22 +129,22 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 		return TRUE;
 	case WM_NOTIFY:
 		{
-			NMHDR *hdr = (NMHDR *)lParam;
-			if(hdr->code == LVN_ITEMCHANGED && hdr->idFrom == IDC_LYRICLIST)
-			{
-				int nSel;
-				NMLISTVIEW *nlv = (NMLISTVIEW *)lParam;
-				nSel = nlv->iItem;
-				LVITEM litem;
-				litem.mask = LVIF_PARAM;
-				litem.iItem = nSel;
-				litem.iSubItem = 0;
-				ListView_GetItem(GetDlgItem(m_hWnd, IDC_LYRICLIST), &litem);
-				Lyric *res = m_searchresult->Get((int)litem.lParam);
-				std::string lyric = res->GetRawLyric();
-				boost::replace_all(lyric, "<br>", "\r\n");
-				uSetDlgItemText(m_hWnd, IDC_LYRIC, lyric.c_str());
-			}
+				NMHDR *hdr = (NMHDR *)lParam;
+				if(hdr->code == LVN_ITEMCHANGED && hdr->idFrom == IDC_LYRICLIST)
+				{
+					int nSel;
+					NMLISTVIEW *nlv = (NMLISTVIEW *)lParam;
+					nSel = nlv->iItem;
+					LVITEM litem;
+					litem.mask = LVIF_PARAM;
+					litem.iItem = nSel;
+					litem.iSubItem = 0;
+					ListView_GetItem(GetDlgItem(m_hWnd, IDC_LYRICLIST), &litem);
+					Lyric *res = m_searchresult->Get((int)litem.lParam);
+					std::string lyric = res->GetRawLyric();
+					boost::replace_all(lyric, "<br>", "\r\n");
+					uSetDlgItemText(m_hWnd, IDC_LYRIC, lyric.c_str());
+				}
 		}
 		return TRUE;
 	case WM_COMMAND:
@@ -154,64 +154,63 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 			{
 			case IDC_SEARCH:
 				{
-					pfc::string8 artist;
-					uGetDlgItemText(m_hWnd, IDC_ARTIST, artist);
+					boost::thread([&](){
+						pfc::string8 artist;
+						uGetDlgItemText(m_hWnd, IDC_ARTIST, artist);
 
-					pfc::string8 title;
-					uGetDlgItemText(m_hWnd, IDC_TITLE, title);
-
-
-					if(artist.get_length() == 0)
-					{
-
-						//MessageBox(m_hWnd, TEXT("아티스트를 입력해 주세요"), TEXT("에러"), MB_OK);
-						//return TRUE;
-						/// 아티스트가 입력되지 않았다면 기본값으로 공백
-						artist.set_string("");
-					}
+						pfc::string8 title;
+						uGetDlgItemText(m_hWnd, IDC_TITLE, title);
 
 
-					if(title.get_length() == 0)
-					{
-						///MessageBox(m_hWnd, TEXT("제목을 입력해 주세요"), TEXT("에러"), MB_OK);
-						///return TRUE;
-						/// 제목이 입력되지 않았다면 기본값으로 공백
-						title.set_string("");
-					}
-					if(artist.toString() == "" && title.toString() == "")
-					{
-						MessageBox(m_hWnd, TEXT("제목이나 아티스트명을 입력해 주세요"), TEXT("에러"), MB_OK);
-						return TRUE;
-					}
-					/// 아티스트나 타이틀에 타이틀 포맷이 존재한다면?
-					if(!strcmp(artist.toString(),"%artist%"))
-					{
-						service_ptr_t<titleformat_object> to;
-						static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%artist%");
-						m_track->format_title(NULL, artist, to, NULL);
-						uSetDlgItemText(m_hWnd, IDC_ARTIST, artist.get_ptr());
-					}
-					if(!strcmp(title.toString(),"%title%"))
-					{
-						service_ptr_t<titleformat_object> to;
-						static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%title%");
-						m_track->format_title(NULL, title, to, NULL);
-						uSetDlgItemText(m_hWnd, IDC_TITLE, title.get_ptr());
-					}
-					m_page = 0;
-					m_lyriccount = LyricSourceAlsong().SearchLyricGetCount(artist.toString(),title.toString());
-					m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
-					if(m_searchlistthread){
-					m_searchlistthread->interrupt();
-					m_searchlistthread->join();
-					m_searchlistthread.reset();
-					}
-					m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
-					SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) | WS_DISABLED);
-					if(m_lyriccount > 100)
-						SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) & ~WS_DISABLED);
-					else
-						SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) | WS_DISABLED);
+						if(artist.get_length() == 0)
+						{
+
+							//MessageBox(m_hWnd, TEXT("아티스트를 입력해 주세요"), TEXT("에러"), MB_OK);
+							//return TRUE;
+							/// 아티스트가 입력되지 않았다면 기본값으로 공백
+							artist.set_string("");
+						}
+
+
+						if(title.get_length() == 0)
+						{
+							///MessageBox(m_hWnd, TEXT("제목을 입력해 주세요"), TEXT("에러"), MB_OK);
+							///return TRUE;
+							/// 제목이 입력되지 않았다면 기본값으로 공백
+							title.set_string("");
+						}
+						if(artist.toString() == "" && title.toString() == "")
+						{
+							MessageBox(m_hWnd, TEXT("제목이나 아티스트명을 입력해 주세요"), TEXT("에러"), MB_OK);
+							return TRUE;
+						}
+						/// 아티스트나 타이틀에 타이틀 포맷이 존재한다면?
+						if(!strcmp(artist.toString(),"%artist%"))
+						{
+							service_ptr_t<titleformat_object> to;
+							static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%artist%");
+							m_track->format_title(NULL, artist, to, NULL);
+							uSetDlgItemText(m_hWnd, IDC_ARTIST, artist.get_ptr());
+						}
+						if(!strcmp(title.toString(),"%title%"))
+						{
+							service_ptr_t<titleformat_object> to;
+							static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%title%");
+							m_track->format_title(NULL, title, to, NULL);
+							uSetDlgItemText(m_hWnd, IDC_TITLE, title.get_ptr());
+						}
+						m_page = 0;
+						uSetDlgItemText(m_hWnd, IDC_STATUS,pfc::string8("가사를 검색중입니다.").toString());
+						m_lyriccount = LyricSourceAlsong().SearchLyricGetCount(artist.toString(),title.toString());
+						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+
+						m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
+						SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) | WS_DISABLED);
+						if(m_lyriccount > 100)
+							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) & ~WS_DISABLED);
+						else
+							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) | WS_DISABLED);
+					});
 				}
 				break;
 			case IDC_RESET:
@@ -232,57 +231,52 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 				break;
 			case IDC_PREV:
 				{
-					if(m_page == 0)
-						return TRUE;
-					m_page --;
-					pfc::string8 artist;
-					uGetDlgItemText(m_hWnd, IDC_ARTIST, artist);
-					pfc::string8 title;
-					uGetDlgItemText(m_hWnd, IDC_TITLE, title);
-					m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
-					if(m_searchlistthread){
-					m_searchlistthread->interrupt();
-					m_searchlistthread->join();
-					m_searchlistthread.reset();
-					}
-					m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
-					if(m_page != 0)
-						SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) & ~WS_DISABLED);
-					else
-						SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) | WS_DISABLED);
-					if(m_lyriccount / 100 != m_page)
-						SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) & ~WS_DISABLED);
-					else
-						SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) | WS_DISABLED);
+					boost::thread([&](){
+						if(m_page == 0)
+							return TRUE;
+						m_page --;
+						pfc::string8 artist;
+						uGetDlgItemText(m_hWnd, IDC_ARTIST, artist);
+						pfc::string8 title;
+						uGetDlgItemText(m_hWnd, IDC_TITLE, title);
+						uSetDlgItemText(m_hWnd, IDC_STATUS,pfc::string8("이전 페이지로 이동합니다.").toString());
+						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+						m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
+						if(m_page != 0)
+							SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) & ~WS_DISABLED);
+						else
+							SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) | WS_DISABLED);
+						if(m_lyriccount / 100 != m_page)
+							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) & ~WS_DISABLED);
+						else
+							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) | WS_DISABLED);
+					});
 				}
 				break;
 			case IDC_NEXT:
 				{
-					if(m_page == m_lyriccount / 100)
-						return TRUE;
-					m_page ++;
-					pfc::string8 artist;
-					uGetDlgItemText(m_hWnd, IDC_ARTIST, artist);
-					pfc::string8 title;
-					uGetDlgItemText(m_hWnd, IDC_TITLE, title);
+					boost::thread([&](){
+						if(m_page == m_lyriccount / 100)
+							return TRUE;
+						m_page ++;
+						pfc::string8 artist;
+						uGetDlgItemText(m_hWnd, IDC_ARTIST, artist);
+						pfc::string8 title;
+						uGetDlgItemText(m_hWnd, IDC_TITLE, title);
 
-					m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
-					if(m_searchlistthread){
-					m_searchlistthread->interrupt();
-					m_searchlistthread->join();
-					m_searchlistthread.reset();
-					}
-					m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
+						uSetDlgItemText(m_hWnd, IDC_STATUS,pfc::string8("다음 페이지로 이동합니다.").toString());
+						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+						m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
 
-					if(m_page != 0)
-						SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) & ~WS_DISABLED);
-					else
-						SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) | WS_DISABLED);
-					if(m_lyriccount / 100 != m_page)
-						SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) & ~WS_DISABLED);
-					else
-						SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) | WS_DISABLED);
-
+						if(m_page != 0)
+							SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) & ~WS_DISABLED);
+						else
+							SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) | WS_DISABLED);
+						if(m_lyriccount / 100 != m_page)
+							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) & ~WS_DISABLED);
+						else
+							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) | WS_DISABLED);
+					});
 				}
 				break;
 			case IDC_SYNCEDIT:
