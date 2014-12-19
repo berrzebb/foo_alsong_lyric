@@ -376,6 +376,17 @@ DWORD LyricManager::FetchLyric(const metadb_handle_ptr &track)
 		std::wstring wBuf;
 		if(cfg_outer_nonlyric){
 			wBuf = ((UIPreference)cfg_outer).GetNonLyricText();
+			std::string sBuf;
+			pfc::string8 nonLyric;
+			sBuf = pfc::stringcvt::string_utf8_from_wide(wBuf.c_str());
+			service_ptr_t<titleformat_object> to;
+			static_api_ptr_t<titleformat_compiler>()->compile_safe(to,sBuf.c_str());
+			if(track->format_title(NULL,nonLyric,to,NULL))
+			{
+				Status.append(nonLyric.get_ptr());
+				wBuf = Status.get_ptr();
+			}
+
 		}else{
 			service_ptr_t<titleformat_object> to;
 			pfc::string8 title;
