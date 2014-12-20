@@ -73,6 +73,8 @@ bool cfg_window_placement::on_window_creation(HWND window)
 	{
 		if (m_data.length==sizeof(m_data) && test_rect(&m_data.rcNormalPosition))
 		{
+			if(m_data.showCmd != 0)
+				m_data.showCmd = 0; //dlunch: bugfix
 			if (SetWindowPlacement(window,&m_data))
 			{
 				ret = true;

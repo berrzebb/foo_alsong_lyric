@@ -163,7 +163,7 @@ DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 				}
 
 			}
-			else
+			else if(!StrCmpIA(fmt,"wav") || !StrCmpIA(fmt, "flac") || !StrCmpIA(fmt, "ape")) //wav나 flac, ape. 죄다 시작부터
 				Start = 0;
 
 			BYTE *buf = (BYTE *)malloc(0x28000);
