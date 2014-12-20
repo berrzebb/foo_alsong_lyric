@@ -22,6 +22,7 @@
 #include "md5.h"
 #include "SoapHelper.h"
 #include "AlsongLyric.h"
+#include "FLAC++/all.h"
 
 #define ALSONG_VERSION "3.02"
 
@@ -109,8 +110,19 @@ DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 
 			md5((unsigned char *)&buf[0], min(buf.size(), 0x50000) * sizeof(double), MD5);
 		}
-		else
-		{
+		else if(!StrCmpIA(fmt,"flac") || !StrCmpIA(fmt,"ogg")){ /// FLAC 처리
+			file_info_impl info;
+			track->get_info(info);
+			const char *realfile = info.info_get("referenced_file");
+			pfc::string realfilename = pfc::io::path::getDirectory(str) + "\\" + realfile;
+			FLAC::Metadata::StreamInfo streamInfo;
+			FLAC::Metadata::get_streaminfo(realfilename.get_ptr(),streamInfo);
+			BYTE* MD5FLAC = (BYTE*)streamInfo.get_md5sum(); 
+			for(int i=0; i < 15; ++i)
+			{
+				MD5[i] = MD5FLAC[i];
+			}
+		}else{ 
 			if(!StrCmpIA(fmt, "mp3"))
 			{
 				while(1) //ID3가 여러개 있을수도 있음
@@ -136,6 +148,7 @@ DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 						break;
 				}
 			}
+/*
 			else if(!StrCmpIA(fmt, "ogg"))
 			{
 				//처음 나오는 vorbis setup header 검색
@@ -161,9 +174,7 @@ DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 					if(i > sourcefile->get_size(abort_callback))
 						return false; //에러
 				}
-			}else if(!StrCmpIA(fmt,"flac")){ /// FLAC 처리
-				Start = 0;
-			}
+			}*/
 			else if(!StrCmpIA(fmt,"wav") || !StrCmpIA(fmt, "ape")) //wav나 ape. 죄다 시작부터
 				Start = 0;
 

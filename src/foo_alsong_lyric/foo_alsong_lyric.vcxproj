@@ -102,8 +102,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
-      <AdditionalIncludeDirectories>../../3rdparty/squirrel/sqplus;../../3rdparty/squirrel/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../3rdparty/squirrel/sqplus;../../3rdparty/squirrel/include;../../3rdparty/libflac/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;FLAC__NO_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -136,7 +136,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <AllowIsolation>true</AllowIsolation>
       <CLRThreadAttribute>MTAThreadingAttribute</CLRThreadAttribute>
-      <AdditionalDependencies>libFLAC_static.lib;sqplus.lib;sqstdlib.lib;squirrel.lib;foobar2000_component_client.lib;foobar2000_SDK.lib;pfc.lib;columns_ui_sdk.lib;foobar2000_sdk_helpers.lib;Msimg32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libogg_static.lib;win_utf8_io_static.lib;libFLAC_static.lib;libFLAC++_static.lib;sqplus.lib;sqstdlib.lib;squirrel.lib;foobar2000_component_client.lib;foobar2000_SDK.lib;pfc.lib;columns_ui_sdk.lib;foobar2000_sdk_helpers.lib;Msimg32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../3rdparty/boost/lib;$(SolutionDir)$(Configuration);</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
