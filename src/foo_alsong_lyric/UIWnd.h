@@ -26,6 +26,7 @@ private:
 	UIManager *m_UI;
 	IPropertyStore *m_Propstore;
 	int AddTaskList(std::wstring command, std::wstring display, std::wstring appid);
+	int AddTaskList(std::vector<std::pair<std::wstring,std::wstring>> data,std::wstring appid);
 	bool m_isResizing;
 	bool m_isBlur; //determines if windows is blurred by dwm
 public:

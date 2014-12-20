@@ -62,8 +62,8 @@
     <ClCompile>
       <AdditionalOptions>/Bt /Zm165 %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../3rdparty/squirrel/sqplus;../../3rdparty/squirrel/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_STLP_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>../../3rdparty/squirrel/sqplus;../../3rdparty/squirrel/include;../../3rdparty/libflac/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;FLAC__NO_DLL;_WINDOWS;_STLP_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -86,7 +86,7 @@
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>libFLAC_static.lib;sqplus.lib;sqstdlib.lib;squirrel.lib;foobar2000_component_client.lib;foobar2000_SDK.lib;pfc.lib;columns_ui_sdk.lib;foobar2000_sdk_helpers.lib;Msimg32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libogg_static.lib;win_utf8_io_static.lib;libFLAC_static.lib;libFLAC++_static.lib;sqplus.lib;sqstdlib.lib;squirrel.lib;foobar2000_component_client.lib;foobar2000_SDK.lib;pfc.lib;columns_ui_sdk.lib;foobar2000_sdk_helpers.lib;Msimg32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../3rdparty/boost/lib;$(SolutionDir)$(Configuration)\</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>

@@ -27,18 +27,21 @@ class menu_command_plugin : public mainmenu_commands
 {
 	virtual t_uint32 get_command_count() 
 	{
-		return 2;
+		return 3;
 	}
 
 	virtual GUID get_command(t_uint32 p_index) 
 	{
+
 		static const GUID guid_plugin_lyric_menu = { 0x66821da5, 0xfa15, 0x4002, { 0x99, 0xc5, 0x8c, 0x6a, 0x96, 0xf4, 0xe, 0xad } };
 		static const GUID guid_plugin_window_config = { 0x300e3322, 0xc22, 0x4354, { 0xa7, 0x5, 0x28, 0xfb, 0x48, 0xc4, 0xc9, 0xd0 } };
-
+		static const GUID guid_plugin_lyric_search = { 0x6c1cba98, 0xcb52, 0x4eca, { 0x92, 0xb6, 0x7a, 0x86, 0x25, 0xde, 0x1a, 0x6f } };
 		if(p_index == 0)
 			return guid_plugin_lyric_menu;
 		else if(p_index == 1)
 			return guid_plugin_window_config;
+		else if(p_index == 2)
+			return guid_plugin_lyric_search;
 		return pfc::guid_null;
 	}
 
@@ -46,14 +49,20 @@ class menu_command_plugin : public mainmenu_commands
 	{
 		if(p_index == 0)
 			p_out = EncodingFunc::ToUTF8(TEXT("알송 실시간 가사")).c_str();
-		if(p_index == 1)
+		else if(p_index == 1)
 			p_out = EncodingFunc::ToUTF8(TEXT("Alsong Lyric Window Config")).c_str();
+		else if(p_index == 2)
+			p_out = EncodingFunc::ToUTF8(TEXT("알송 가사 추가/변경")).c_str();
 	}
 
 	virtual bool get_description(t_uint32 p_index, pfc::string_base & p_out) 
 	{
 		if(p_index == 0)
 			p_out = EncodingFunc::ToUTF8(TEXT("알송 실시간 가사 창을 열거나 닫습니다.")).c_str();
+		else if(p_index == 1)
+			p_out = EncodingFunc::ToUTF8(TEXT("알송 실시간 가사 설정창을 엽니다.")).c_str();
+		else if(p_index == 2)
+			p_out = EncodingFunc::ToUTF8(TEXT("실시간 가사를 검색합니다.")).c_str();
 		else
 			return false;
 		return true;
@@ -76,6 +85,10 @@ class menu_command_plugin : public mainmenu_commands
 		else if(p_index == 1)
 		{
 			cfg_outer.get_value().OpenConfigPopup(core_api::get_main_window());
+		}
+		else if(p_index == 2)
+		{
+			AlsongLyricLinkDialog::OpenLyricLinkDialog(core_api::get_main_window());
 		}
 	}
 

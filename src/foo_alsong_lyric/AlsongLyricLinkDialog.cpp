@@ -61,6 +61,7 @@ void AlsongLyricLinkDialog::PopulateListView()
 	{
 		std::wstring artist = pfc::stringcvt::string_wide_from_utf8(lrc->GetArtist().c_str()).get_ptr();
 		std::wstring title = pfc::stringcvt::string_wide_from_utf8(lrc->GetTitle().c_str()).get_ptr();
+		std::wstring registrant = pfc::stringcvt::string_wide_from_utf8(lrc->GetRegistrant().c_str()).get_ptr();
 		LVITEM item;
 		item.mask = LVIF_TEXT | LVIF_PARAM;
 		item.iItem = n ++;
@@ -71,6 +72,10 @@ void AlsongLyricLinkDialog::PopulateListView()
 		item.iSubItem = 1;
 		item.mask = LVIF_TEXT;
 		item.pszText = const_cast<WCHAR *>(title.c_str());
+		ListView_SetItem(hListView, &item);
+		item.iSubItem = 2;
+		item.mask = LVIF_TEXT;
+		item.pszText = const_cast<WCHAR *>(registrant.c_str());
 		ListView_SetItem(hListView, &item);
 	}while((lrc = m_searchresult->Get()), lrc->HasLyric());
 }
@@ -100,21 +105,24 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 		return TRUE;
 	case WM_INITDIALOG:
 		{
-			uSetWindowText(m_hWnd, m_track->get_path());
+			if(m_track == NULL){
+				static_api_ptr_t<play_control> pc;
+				pc->get_now_playing(m_track);
+			}
+				uSetWindowText(m_hWnd, m_track->get_path());
 
-			//set artist, title field
-			service_ptr_t<titleformat_object> to;
-			pfc::string8 artist;
-			pfc::string8 title;
+				//set artist, title field
+				service_ptr_t<titleformat_object> to;
+				pfc::string8 artist;
+				pfc::string8 title;
 
-			static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%artist%");
-			m_track->format_title(NULL, artist, to, NULL);
-			static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%title%");
-			m_track->format_title(NULL, title, to, NULL);
-			uSetDlgItemText(m_hWnd, IDC_ARTIST, artist.get_ptr());
-			uSetDlgItemText(m_hWnd, IDC_TITLE, title.get_ptr());
-			//perform listview initialization.
-
+				static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%artist%");
+				m_track->format_title(NULL, artist, to, NULL);
+				static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%title%");
+				m_track->format_title(NULL, title, to, NULL);
+				uSetDlgItemText(m_hWnd, IDC_ARTIST, artist.get_ptr());
+				uSetDlgItemText(m_hWnd, IDC_TITLE, title.get_ptr());
+				//perform listview initialization.
 			LVCOLUMN lv;
 			lv.mask = LVCF_WIDTH | LVCF_TEXT;
 			lv.cx = 150;
@@ -122,6 +130,9 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 			ListView_InsertColumn(GetDlgItem(m_hWnd, IDC_LYRICLIST), 0, &lv);
 			lv.pszText = TEXT("제목");
 			ListView_InsertColumn(GetDlgItem(m_hWnd, IDC_LYRICLIST), 1, &lv);
+			lv.pszText = TEXT("작성자");
+			ListView_InsertColumn(GetDlgItem(m_hWnd, IDC_LYRICLIST), 2, &lv);
+
 
 			SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) | WS_DISABLED); //disable next, prev button
 			SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) | WS_DISABLED);

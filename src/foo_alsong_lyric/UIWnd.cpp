@@ -157,8 +157,12 @@ HWND UIWnd::Create()
 			InitPropVariantFromBoolean(true, &propvar);
 			m_Propstore->SetValue(PKEY_AppUserModel_PreventPinning, propvar); //not to pin
 		}
-		AddTaskList(L"알송 실시간 가사", L"알송 실시간 가사 창", L"");
-		AddTaskList(L"Alsong Lyric Window Config", L"알송 실시간 가사 창 설정", appid);
+		std::vector<std::pair<std::wstring,std::wstring>> Tasks;
+		Tasks.emplace_back(std::make_pair<std::wstring,std::wstring>(std::wstring(L"알송 실시간 가사"),std::wstring(L"알송 실시간 가사 창")));		
+		Tasks.emplace_back(std::make_pair<std::wstring,std::wstring>(std::wstring(L"Alsong Lyric Window Config"),std::wstring(L"알송 실시간 가사 창 설정")));
+		Tasks.emplace_back(std::make_pair<std::wstring,std::wstring>(std::wstring(L"알송 가사 추가/변경"),std::wstring(L"가사 검색")));
+		AddTaskList(Tasks,L"");
+		AddTaskList(Tasks,appid);
 	}
 	m_isBlur = false;
 	if(cfg_outer_blur)
@@ -192,7 +196,61 @@ HWND UIWnd::Create()
 	
 	return m_hWnd;
 }
+int UIWnd::AddTaskList(std::vector<std::pair<std::wstring,std::wstring>> data,std::wstring appid)
+{
+	ICustomDestinationList *destlist = NULL;
+	CoCreateInstance(CLSID_DestinationList, NULL, CLSCTX_INPROC_SERVER, IID_ICustomDestinationList, (void **)&destlist);
+	if(destlist) //main window list
+	{
+		UINT MinSlot;
+		IObjectArray *removed;
+		if(appid.size())
+			destlist->SetAppID(appid.c_str());
+		destlist->BeginList(&MinSlot, IID_IObjectArray, (void **)&removed);
+		IObjectCollection *tasks;
+		CoCreateInstance(CLSID_EnumerableObjectCollection, NULL, CLSCTX_INPROC_SERVER, IID_IObjectCollection, (void **)&tasks);
+		size_t sz = data.size();
+		std::vector<IShellLink*> linklist;
+		for(int i = 0; i< sz; ++i)
+		{
+			IShellLink* link;
+			CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **)&link);
+			wchar_t name[255];
+			GetModuleFileName(GetModuleHandle(L"foobar2000.exe"), name, 255);
+			link->SetPath(name);
+			link->SetArguments((std::wstring(L"/command:\"") + data[i].first + L"\"").c_str());
 
+			IPropertyStore *propstore;
+			link->QueryInterface(IID_IPropertyStore, (void **)&propstore);
+			PROPVARIANT pv;
+			InitPropVariantFromString(data[i].second.c_str(), &pv);
+			propstore->SetValue(PKEY_Title, pv);
+			propstore->Commit();
+			propstore->Release();
+			tasks->AddObject(link);
+			linklist.emplace_back(link);
+		}
+		IObjectArray *arr;
+		tasks->QueryInterface(IID_IObjectArray, (void **)&arr);
+		destlist->AddUserTasks(arr);
+		destlist->CommitList();
+
+		destlist->Release();
+		tasks->Release();
+		arr->Release();
+		size_t linksz = linklist.size();
+		for(int i=0; i < linksz; i++)
+		{
+			linklist[i]->Release();
+		}
+		linklist.clear();
+		removed->Release();
+
+		return 1;
+	}
+
+	return 0;
+}
 int UIWnd::AddTaskList(std::wstring command, std::wstring display, std::wstring appid)
 {
 	ICustomDestinationList *destlist = NULL;
@@ -221,7 +279,6 @@ int UIWnd::AddTaskList(std::wstring command, std::wstring display, std::wstring 
 		propstore->SetValue(PKEY_Title, pv);
 		propstore->Commit();
 		propstore->Release();
-
 		tasks->AddObject(link);
 		IObjectArray *arr;
 		tasks->QueryInterface(IID_IObjectArray, (void **)&arr);

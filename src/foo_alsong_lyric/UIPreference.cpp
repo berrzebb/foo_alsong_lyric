@@ -890,3 +890,4 @@ void UIPreference::OpenConfigPopup(HWND hParent)
 
 	int nRet = PropertySheet(&psh);
 }
+

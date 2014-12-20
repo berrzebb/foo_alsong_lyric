@@ -375,7 +375,7 @@ DWORD LyricManager::FetchLyric(const metadb_handle_ptr &track)
 		pfc::stringcvt::string_wide_from_utf8_fast Status;
 		std::wstring wBuf;
 		if(cfg_outer_nonlyric){
-			wBuf = ((UIPreference)cfg_outer).GetNonLyricText();
+			wBuf = cfg_outer.get_value().GetNonLyricText();
 			std::string sBuf;
 			pfc::string8 nonLyric;
 			sBuf = pfc::stringcvt::string_utf8_from_wide(wBuf.c_str());
