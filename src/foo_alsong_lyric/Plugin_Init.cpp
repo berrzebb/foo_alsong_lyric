@@ -22,10 +22,12 @@
 #include "LyricManager.h"
 
 DECLARE_COMPONENT_VERSION(
-"Alsong lyric plugin",
+"Alsong lyric plugin(MOD)",
 "0.2.0",
 "Alsong lyric plugin for foobar2000\n"
 "Developed by dlunch(dlunch@gmail.com)\n"
+"Modder by berrzebb(ph4913@gmail.com)\n"
+"Repository by http://github.com/berrzebb/foo_alsong_lyric \n"
 "compiled: " __DATE__ "\n"
 "with Panel API version: " UI_EXTENSION_VERSION)
 

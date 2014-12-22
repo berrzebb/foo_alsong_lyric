@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "pugixml/pugixml.hpp"
 #include <string>
 #include <vector>
 

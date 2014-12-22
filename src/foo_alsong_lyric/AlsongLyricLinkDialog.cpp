@@ -186,6 +186,12 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 						uGetDlgItemText(m_hWnd, IDC_TITLE, title);
 						pfc::string8 tmp;
 
+						if(artist.toString() == "" && title.toString() == "")
+						{
+							MessageBox(m_hWnd, TEXT("제목이나 아티스트명을 입력해 주세요"), TEXT("에러"), MB_OK);
+							return TRUE;
+						}
+
 						if(artist.get_length() == 0)
 						{
 
@@ -202,11 +208,6 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 							///return TRUE;
 							/// 제목이 입력되지 않았다면 기본값으로 공백
 							title.set_string("");
-						}
-						if(artist.toString() == "" && title.toString() == "")
-						{
-							MessageBox(m_hWnd, TEXT("제목이나 아티스트명을 입력해 주세요"), TEXT("에러"), MB_OK);
-							return TRUE;
 						}
 						/// 아티스트나 타이틀에 타이틀 포맷이 존재한다면?
 						service_ptr_t<titleformat_object> to;
@@ -233,8 +234,9 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 							m_searchlistthread->join();
 							m_searchlistthread.reset();
 						}
-
-						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+						boost::thread([&](){
+							m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+						}).join();
 						if(m_searchresult == NULL) 
 						{
 							SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"가사가 존재하지 않습니다.");
@@ -276,7 +278,15 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 						pfc::string8 title;
 						uGetDlgItemText(m_hWnd, IDC_TITLE, title);
 						SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"이전 페이지로 이동합니다.");
-						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+
+						boost::thread([&](){
+							m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+						}).join();
+						if(m_searchresult == NULL) 
+						{
+							SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"가사가 존재하지 않습니다.");
+							return TRUE;
+						}
 						if(m_searchlistthread){
 							m_searchlistthread->interrupt();
 							m_searchlistthread->join();
@@ -305,7 +315,14 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 						uGetDlgItemText(m_hWnd, IDC_TITLE, title);
 
 						SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"다음 페이지로 이동합니다.");
-						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+						boost::thread([&](){
+							m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+						}).join();
+						if(m_searchresult == NULL) 
+						{
+							SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"가사가 존재하지 않습니다.");
+							return TRUE;
+						}
 
 						if(m_searchlistthread){
 							m_searchlistthread->interrupt();

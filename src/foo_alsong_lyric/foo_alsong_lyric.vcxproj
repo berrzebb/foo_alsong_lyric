@@ -136,7 +136,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <AllowIsolation>true</AllowIsolation>
       <CLRThreadAttribute>MTAThreadingAttribute</CLRThreadAttribute>
-      <AdditionalDependencies>libogg_static.lib;win_utf8_io_static.lib;libFLAC_static.lib;libFLAC++_static.lib;sqplus.lib;sqstdlib.lib;squirrel.lib;foobar2000_component_client.lib;foobar2000_SDK.lib;pfc.lib;columns_ui_sdk.lib;foobar2000_sdk_helpers.lib;Msimg32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sqplus.lib;sqstdlib.lib;squirrel.lib;foobar2000_component_client.lib;foobar2000_SDK.lib;pfc.lib;columns_ui_sdk.lib;foobar2000_sdk_helpers.lib;Msimg32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>../../3rdparty/boost/lib;$(SolutionDir)$(Configuration);</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -193,18 +193,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="pugixml\pugixml.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="pugixml\pugixpath.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-      </PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="Socket.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -230,8 +218,6 @@
     <ClInclude Include="UIPreference.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="pugixml\pugiconfig.hpp" />
-    <ClInclude Include="pugixml\pugixml.hpp" />
     <ClInclude Include="Socket.h" />
   </ItemGroup>
   <ItemGroup>
