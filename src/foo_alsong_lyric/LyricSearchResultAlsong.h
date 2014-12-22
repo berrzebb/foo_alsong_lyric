@@ -23,9 +23,7 @@ class LyricSearchResultAlsong : public LyricSearchResult
 {
 private:
 	std::vector<AlsongLyric> m_Document;
-	int offset;
-	int mask;
-	AlsongLyric m_LyricNode;
+	std::vector<AlsongLyric>::iterator m_LyricNode;
 	std::map<int,AlsongLyric> m_LyricResultMap;
 public:
 	LyricSearchResultAlsong(std::vector<AlsongLyric> data);

@@ -227,6 +227,7 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 
 						m_page = 0;
 						SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"가사를 검색중입니다.");
+						boost::thread([&](){
 						m_lyriccount = LyricSourceAlsong().SearchLyricGetCount(artist.toString(),title.toString());
 
 						if(m_searchlistthread){
@@ -234,7 +235,6 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 							m_searchlistthread->join();
 							m_searchlistthread.reset();
 						}
-						boost::thread([&](){
 							m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
 						}).join();
 						if(m_searchresult == NULL) 

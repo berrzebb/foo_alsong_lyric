@@ -1,5 +1,5 @@
 #include "AlsongAPI.h"
-
+#include "AlsongAPIService1SoapProxy.h"
 CAlsongAPI::CAlsongAPI(void)
 {
 	proxy = new Service1SoapProxy(SOAP_C_UTFSTRING);

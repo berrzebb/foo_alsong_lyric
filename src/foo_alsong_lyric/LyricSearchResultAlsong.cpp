@@ -22,18 +22,16 @@
 LyricSearchResultAlsong::LyricSearchResultAlsong(std::vector<AlsongLyric> data) 
 {
 	m_Document = data;
-	mask = m_Document.size()-1;
-	offset = 0;
-	m_LyricNode = m_Document[offset];
+	m_LyricNode = m_Document.begin();
 	m_LyricResultMap[-1] = AlsongLyric();
 }
 
 Lyric *LyricSearchResultAlsong::Get()
 {
-	if(offset == mask) return dynamic_cast<Lyric *>(&m_LyricResultMap.find(-1)->second);
-	AlsongLyric ret(m_LyricNode);
-	m_LyricNode = m_Document[offset++];
+	if(m_LyricNode == m_Document.end()){return dynamic_cast<Lyric *>(&m_LyricResultMap.find(-1)->second);}
+	AlsongLyric ret(*m_LyricNode);
 	m_LyricResultMap[ret.GetInternalID()] = ret;
+	m_LyricNode++;
 	return dynamic_cast<Lyric *>(&m_LyricResultMap.find(ret.GetInternalID())->second);
 }
 
