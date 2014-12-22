@@ -19,22 +19,21 @@
 
 #include "LyricSearchResultAlsong.h"
 
-LyricSearchResultAlsong::LyricSearchResultAlsong(boost::shared_ptr<pugi::xml_document> data)
+LyricSearchResultAlsong::LyricSearchResultAlsong(std::vector<AlsongLyric> data) 
 {
 	m_Document = data;
-	m_LyricNode = m_Document->first_element_by_path("soap:Envelope/soap:Body/GetResembleLyric2Response/GetResembleLyric2Result/ST_GET_RESEMBLELYRIC2_RETURN"); //TODO: Test
+	mask = m_Document.size()-1;
+	offset = 0;
+	m_LyricNode = m_Document[offset];
 	m_LyricResultMap[-1] = AlsongLyric();
 }
 
 Lyric *LyricSearchResultAlsong::Get()
 {
-	if(!m_LyricNode)
-		return &m_LyricResultMap.find(-1)->second; //invalid item
-
+	if(offset == mask) return dynamic_cast<Lyric *>(&m_LyricResultMap.find(-1)->second);
 	AlsongLyric ret(m_LyricNode);
-	m_LyricNode = m_LyricNode.next_sibling("ST_GET_RESEMBLELYRIC2_RETURN");
+	m_LyricNode = m_Document[offset++];
 	m_LyricResultMap[ret.GetInternalID()] = ret;
-
 	return dynamic_cast<Lyric *>(&m_LyricResultMap.find(ret.GetInternalID())->second);
 }
 

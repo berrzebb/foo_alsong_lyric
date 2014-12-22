@@ -18,7 +18,6 @@
 #include "stdafx.h"
 
 #include "Lyric.h"
-#include "SoapHelper.h"
 #include "pugixml/pugixml.hpp"
 
 Lyric::Lyric()

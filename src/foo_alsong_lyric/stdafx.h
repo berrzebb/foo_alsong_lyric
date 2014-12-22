@@ -44,8 +44,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time.hpp>
+#include <boost/filesystem.hpp>
 #include "pugixml/pugixml.hpp"
-
+#include "API/AlsongInterface.h"
 #define foreach BOOST_FOREACH
 #define reverse_foreach BOOST_REVERSE_FOREACH
 

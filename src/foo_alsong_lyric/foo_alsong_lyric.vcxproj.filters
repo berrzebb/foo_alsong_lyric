@@ -16,6 +16,9 @@
     <Filter Include="pugixml">
       <UniqueIdentifier>{3071f2c3-2602-4b43-87a6-9294720f00dd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="API">
+      <UniqueIdentifier>{8c5d639e-f0ec-41d5-bcef-c3cb3df7db60}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConfigStore.cpp">
@@ -46,9 +49,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Socket.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SoapHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AlsongLyric.cpp">
@@ -90,6 +90,21 @@
     <ClCompile Include="LyricSync.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="API\stdsoap2.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="API\AlsongAPI.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="API\AlsongAPIC.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="API\AlsongAPIService1SoapProxy.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="API\AlsongInterface.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConfigStore.h">
@@ -117,9 +132,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Socket.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SoapHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UIElement.h">

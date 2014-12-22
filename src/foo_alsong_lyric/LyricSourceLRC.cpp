@@ -64,7 +64,6 @@ std::wstring LyricSourceLRC::getSavePath(const metadb_handle_ptr &track)
 		p_callback.release();
 		WaitForSingleObject(event, INFINITE);
 		CloseHandle(event);
-		wpath = EncodingFunc::ToUTF16(out);
 		if(PathIsRelative(wpath.c_str()))
 			wpath = dirname + wpath;
 		if(GetFileAttributes(wpath.c_str()) & FILE_ATTRIBUTE_DIRECTORY && (GetLastError() != ERROR_FILE_NOT_FOUND && GetLastError() != ERROR_PATH_NOT_FOUND))

@@ -18,13 +18,15 @@
 #pragma once
 
 #include "Lyric.h"
-
+class _ns1__GetLyric8Response;
 class AlsongLyric : public Lyric
 {
 private:
 	int m_nInfoID;
 public:
 	AlsongLyric(const pugi::xml_node &node);
+	AlsongLyric(const ns1__ST_USCOREGET_USCORERESEMBLELYRIC2_USCORERETURN& Response);
+	AlsongLyric(const _ns1__GetLyric8Response& Response);
 	AlsongLyric() {}
 	int GetInternalID() const
 	{

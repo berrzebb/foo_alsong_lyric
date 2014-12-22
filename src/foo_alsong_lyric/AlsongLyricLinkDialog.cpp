@@ -35,6 +35,11 @@ AlsongLyricLinkDialog::AlsongLyricLinkDialog(HWND hWndParent, const metadb_handl
 
 AlsongLyricLinkDialog::~AlsongLyricLinkDialog()
 {
+	if(m_searchlistthread){
+		m_searchlistthread->interrupt();
+		m_searchlistthread->join();
+		m_searchlistthread.reset();
+	}
 	EndDialog(m_hWnd, 0);
 	g_LyricLinkDialog = NULL;
 }
@@ -51,17 +56,26 @@ void AlsongLyricLinkDialog::OpenLyricLinkDialog(HWND hWndParent, const metadb_ha
 void AlsongLyricLinkDialog::PopulateListView()
 {
 	HWND hListView = GetDlgItem(m_hWnd, IDC_LYRICLIST);
+
 	Lyric *lrc = m_searchresult->Get();
+	std::wstring artist;
+	std::wstring title;
+	std::wstring registrant;
 	std::stringstream str;
 	str << m_page * 100 + 1 << "~" << min(m_lyriccount, (m_page + 1) * 100) << "/" << m_lyriccount;
 	uSetDlgItemText(m_hWnd, IDC_STATUS, str.str().c_str());
 	int n = 0;
 	ListView_DeleteAllItems(hListView);
+
 	do
 	{
-		std::wstring artist = pfc::stringcvt::string_wide_from_utf8(lrc->GetArtist().c_str()).get_ptr();
-		std::wstring title = pfc::stringcvt::string_wide_from_utf8(lrc->GetTitle().c_str()).get_ptr();
-		std::wstring registrant = pfc::stringcvt::string_wide_from_utf8(lrc->GetRegistrant().c_str()).get_ptr();
+		if(boost::this_thread::interruption_requested()){
+			return;
+		}
+		artist = pfc::stringcvt::string_wide_from_utf8(lrc->GetArtist().c_str()).get_ptr();
+		title = pfc::stringcvt::string_wide_from_utf8(lrc->GetTitle().c_str()).get_ptr();
+		registrant = pfc::stringcvt::string_wide_from_utf8(lrc->GetRegistrant().c_str()).get_ptr();
+
 		LVITEM item;
 		item.mask = LVIF_TEXT | LVIF_PARAM;
 		item.iItem = n ++;
@@ -165,7 +179,6 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 			{
 			case IDC_SEARCH:
 				{
-					boost::thread([&](){
 						pfc::string8 artist;
 						uGetDlgItemText(m_hWnd, IDC_ARTIST, artist);
 
@@ -214,15 +227,26 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 						m_page = 0;
 						SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"가사를 검색중입니다.");
 						m_lyriccount = LyricSourceAlsong().SearchLyricGetCount(artist.toString(),title.toString());
-						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
 
+						if(m_searchlistthread){
+							m_searchlistthread->interrupt();
+							m_searchlistthread->join();
+							m_searchlistthread.reset();
+						}
+
+						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+						if(m_searchresult == NULL) 
+						{
+							SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"가사가 존재하지 않습니다.");
+							return TRUE;
+						}
 						m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
 						SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) | WS_DISABLED);
 						if(m_lyriccount > 100)
 							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) & ~WS_DISABLED);
 						else
 							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) | WS_DISABLED);
-					});
+
 				}
 				break;
 			case IDC_RESET:
@@ -243,9 +267,9 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 				break;
 			case IDC_PREV:
 				{
-					boost::thread([&](){
-						if(m_page == 0)
-							return TRUE;
+					if(m_page == 0)
+						return TRUE;
+
 						m_page --;
 						pfc::string8 artist;
 						uGetDlgItemText(m_hWnd, IDC_ARTIST, artist);
@@ -253,6 +277,11 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 						uGetDlgItemText(m_hWnd, IDC_TITLE, title);
 						SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"이전 페이지로 이동합니다.");
 						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+						if(m_searchlistthread){
+							m_searchlistthread->interrupt();
+							m_searchlistthread->join();
+							m_searchlistthread.reset();
+						}
 						m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
 						if(m_page != 0)
 							SetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_PREV), GWL_STYLE) & ~WS_DISABLED);
@@ -262,14 +291,13 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) & ~WS_DISABLED);
 						else
 							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) | WS_DISABLED);
-					});
 				}
 				break;
 			case IDC_NEXT:
 				{
-					boost::thread([&](){
-						if(m_page == m_lyriccount / 100)
-							return TRUE;
+					if(m_page == m_lyriccount / 100)
+						return TRUE;
+
 						m_page ++;
 						pfc::string8 artist;
 						uGetDlgItemText(m_hWnd, IDC_ARTIST, artist);
@@ -278,6 +306,13 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 
 						SetWindowText(GetDlgItem(m_hWnd, IDC_STATUS),L"다음 페이지로 이동합니다.");
 						m_searchresult = LyricSourceAlsong().SearchLyric(artist.toString(), title.toString(), m_page);
+
+						if(m_searchlistthread){
+							m_searchlistthread->interrupt();
+							m_searchlistthread->join();
+							m_searchlistthread.reset();
+						}
+
 						m_searchlistthread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&AlsongLyricLinkDialog::PopulateListView, this)));
 
 						if(m_page != 0)
@@ -288,7 +323,6 @@ UINT AlsongLyricLinkDialog::DialogProc(UINT iMessage, WPARAM wParam, LPARAM lPar
 							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) & ~WS_DISABLED);
 						else
 							SetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE, GetWindowLong(GetDlgItem(m_hWnd, IDC_NEXT), GWL_STYLE) | WS_DISABLED);
-					});
 				}
 				break;
 			case IDC_SYNCEDIT:

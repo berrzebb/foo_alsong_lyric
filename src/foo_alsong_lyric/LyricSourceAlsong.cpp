@@ -20,11 +20,8 @@
 #include "LyricSourceAlsong.h"
 #include "LyricSearchResultAlsong.h"
 #include "md5.h"
-#include "SoapHelper.h"
 #include "AlsongLyric.h"
 #include "FLAC++/all.h"
-
-#define ALSONG_VERSION "3.02"
 
 DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 {	
@@ -36,7 +33,7 @@ DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 	service_ptr_t<file> sourcefile;
 	abort_callback_impl abort_callback;
 	pfc::string8 str = track->get_path();
-	memset(MD5,0,16);
+
 	try
 	{
 		archive_impl::g_open(sourcefile, str, foobar2000_io::filesystem::open_mode_read, abort_callback);
@@ -86,42 +83,31 @@ DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 			helper.open(service_ptr_t<file>(), make_playable_location(realfilename.get_ptr(), 0), input_flag_simpledecode, abort_callback);
 
 			helper.get_info(0, info, abort_callback);
-			if(helper.can_seek())
-				helper.seek(m * 60 + s + ms * 0.01, abort_callback);
+			helper.seek(m * 60 + s + ms * 0.01, abort_callback);
 
 			if (!helper.run(chunk, abort_callback)) return false;		
 
 			t_uint64 length_samples = audio_math::time_to_samples(info.get_length(), chunk.get_sample_rate());
 			//chunk.get_channels();
 			std::vector<double> buf;
-			buf.reserve(0x50000);
+			buf.resize(0x200000);
 			while (true)
 			{
 				// Store the data somewhere.
 				audio_sample *sample = chunk.get_data();
 				int len = chunk.get_data_length();
 				buf.insert(buf.end(), sample, sample + len);
-				if(buf.size() > 0x50000)
+				if(buf.size() > 0x200000)
 					break;
 
 				bool decode_done = !helper.run(chunk, abort_callback);
 				if (decode_done) break;
 			}
 
-			md5((unsigned char *)&buf[0], min(buf.size(), 0x50000) * sizeof(double), MD5);
+			md5((unsigned char *)&buf[0], min(buf.size(), 0x200000), MD5);
 		}
-		else if(!StrCmpIA(fmt,"flac") || !StrCmpIA(fmt,"ogg")){ /// FLAC 처리
-			bool is_ogg = (!StrCmpIA(fmt,"ogg"));
-			file_info_impl info;
-			track->get_info(info);
-			pfc::string8 realfile = track->get_path();
-			realfile.remove_chars(0,7);
-			//FLAC::Metadata::Chain chain;
-
-			//chain.read(realfile.get_ptr(),is_ogg);
-			
-			//md5((unsigned char*)&buf[0],min(buf.size(),0x50000) *sizeof(double),MD5);
-		}else{ 
+		else
+		{
 			if(!StrCmpIA(fmt, "mp3"))
 			{
 				while(1) //ID3가 여러개 있을수도 있음
@@ -147,7 +133,6 @@ DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 						break;
 				}
 			}
-/*
 			else if(!StrCmpIA(fmt, "ogg"))
 			{
 				//처음 나오는 vorbis setup header 검색
@@ -173,8 +158,9 @@ DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 					if(i > sourcefile->get_size(abort_callback))
 						return false; //에러
 				}
-			}*/
-			else if(!StrCmpIA(fmt,"wav") || !StrCmpIA(fmt, "ape")) //wav나 ape. 죄다 시작부터
+
+			}
+			else
 				Start = 0;
 
 			BYTE *buf = (BYTE *)malloc(0x28000);
@@ -254,19 +240,15 @@ boost::shared_ptr<Lyric> LyricSourceAlsong::Get(const metadb_handle_ptr &track)
 	CHAR Hash[50];
 	GetFileHash(track, Hash);
 
-	SoapHelper helper;
-	helper.SetMethod("ns1:GetLyric8");
-	helper.AddParameter("ns1:strChecksum", Hash);
-	helper.AddParameter("ns1:strVersion", ALSONG_VERSION);
-	helper.AddParameter("ns1:strMACAddress", Local_Mac);
-	helper.AddParameter("ns1:strIPAddress", Local_IP);
-
+	CAlsongInterface Interface;
+	_ns1__GetLyric8Response Response;
+	Interface.GetLyric8(Hash,Local_Mac,Local_IP,Response);
 	if(boost::this_thread::interruption_requested())
 		return boost::shared_ptr<Lyric>(new AlsongLyric());
 
 	try
 	{
-		return boost::shared_ptr<Lyric>(new AlsongLyric(helper.Execute()->first_element_by_path("soap:Envelope/soap:Body/GetLyric8Response/GetLyric8Result")));
+		return boost::shared_ptr<Lyric>(new AlsongLyric(Response));
 	}
 	catch(...)
 	{
@@ -325,38 +307,11 @@ DWORD LyricSourceAlsong::Save(const metadb_handle_ptr &track, const std::string 
 	Local_Mac[i] = 0;
 
 	GetFileHash(track, Hash);
-
-	SoapHelper helper;
-	helper.SetMethod("ns1:UploadLyric");
-	helper.AddParameter("ns1:nUploadLyricType", "1");
-	helper.AddParameter("ns1:strVersion", ALSONG_VERSION);
-	helper.AddParameter("ns1:strMD5", Hash);
-	helper.AddParameter("ns1:strRegisterFirstName", strRegisterName.c_str());
-	helper.AddParameter("ns1:strRegisterFirstEMail", "");
-	helper.AddParameter("ns1:strRegisterFirstURL", "");
-	helper.AddParameter("ns1:strRegisterFirstPhone", "");
-	helper.AddParameter("ns1:strRegisterFirstComment", "");
-	helper.AddParameter("ns1:strRegisterName", strRegisterName.c_str());
-	helper.AddParameter("ns1:strRegisterEMail", "");
-	helper.AddParameter("ns1:strRegisterURL", "");
-	helper.AddParameter("ns1:strRegisterPhone", "");
-	helper.AddParameter("ns1:strRegisterComment", "");
-	helper.AddParameter("ns1:strFileName", Filename.c_str());
-	helper.AddParameter("ns1:strTitle", RawLyric.c_str());
-	helper.AddParameter("ns1:strArtist", Artist.c_str());
-	helper.AddParameter("ns1:strAlbum", Album.c_str());
-	if(nInfoID != 0)
-		helper.AddParameter("ns1:nInfoID", boost::lexical_cast<std::string>(nInfoID).c_str());
 	
-	helper.AddParameter("ns1:strLyric", RawLyric.c_str());
-	helper.AddParameter("ns1:nPlayTime", boost::lexical_cast<std::string>(PlayTime).c_str());
-	helper.AddParameter("ns1:strVersion", ALSONG_VERSION);
-	helper.AddParameter("ns1:strMACAddress", Local_Mac);
-	helper.AddParameter("ns1:strIPAddress", Local_IP);
-
+	CAlsongInterface Interface;
 	try
 	{
-		std::string temp = helper.Execute()->first_element_by_path("/soap:Envelope/soap:Body/UploadLyricResponse/UploadLyricResult").first_child().value();
+		std::string temp = 	Interface.UploadLyric(1,Hash,Filename,Title,Artist,Album,Local_Mac,Local_IP,RawLyric,strRegisterName,PlayTime,nInfoID);
 		const char *res = temp.c_str();
 		if(boost::find_first(res, "Successed"))
 			return true;
@@ -375,15 +330,10 @@ DWORD LyricSourceAlsong::Save(const metadb_handle_ptr &track, Lyric &lyric)
 
 boost::shared_ptr<LyricSearchResult> LyricSourceAlsong::SearchLyric(const std::string &Artist, const std::string Title, int nPage)
 {
-	SoapHelper helper;
-	helper.SetMethod("ns1:GetResembleLyric2");
-	helper.AddParameter("ns1:strTitle", Title.c_str());
-	helper.AddParameter("ns1:strArtistName", Artist.c_str());
-	helper.AddParameter("ns1:nCurPage", boost::lexical_cast<std::string>(nPage).c_str());
-
+	CAlsongInterface Interface;
 	try
 	{
-		return boost::shared_ptr<LyricSearchResult>(new LyricSearchResultAlsong(helper.Execute()));
+		return boost::shared_ptr<LyricSearchResult>(Interface.GetResembleLyric2(Artist,Title,nPage));
 	}
 	catch(...)
 	{
@@ -393,13 +343,10 @@ boost::shared_ptr<LyricSearchResult> LyricSourceAlsong::SearchLyric(const std::s
 
 int LyricSourceAlsong::SearchLyricGetCount(const std::string &Artist, const std::string &Title)
 {
-	SoapHelper helper;
-	helper.SetMethod("ns1:GetResembleLyric2Count");
-	helper.AddParameter("ns1:strTitle", Title.c_str());
-	helper.AddParameter("ns1:strArtistName", Artist.c_str());
+	CAlsongInterface Interface;
 	try
 	{
-		return boost::lexical_cast<int>(helper.Execute()->first_element_by_path("soap:Envelope/soap:Body/GetResembleLyric2CountResponse/GetResembleLyric2CountResult/strResembleLyricCount").child_value()); //TODO: Test
+		return Interface.GetResembleLyric2Count(Artist,Title); //TODO: Test
 	}
 	catch(...)
 	{
@@ -449,5 +396,4 @@ std::string LyricSourceAlsong::IsConfigValid(std::map<std::string, std::string>)
 {
 	return "";
 }
-
 LyricSourceFactory<LyricSourceAlsong> LyricSourceAlsongFactory;

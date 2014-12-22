@@ -18,7 +18,7 @@
 #include "stdafx.h"
 
 #include "AlsongLyric.h"
-
+#include "./API/AlsongAPI.h"
 AlsongLyric::AlsongLyric(const pugi::xml_node &node)
 {
 	if(!node)
@@ -46,5 +46,56 @@ AlsongLyric::AlsongLyric(const pugi::xml_node &node)
 		m_nInfoID = boost::lexical_cast<int>(node.child("strInfoID").child_value());
 	}
 
+	Split("<br>");
+}
+
+AlsongLyric::AlsongLyric(const _ns1__GetLyric8Response& Response)
+{
+	auto item = Response.GetLyric8Result;
+	if(!item)
+		return;
+	if(!item->strInfoID->c_str()){
+		m_Title = item->strTitle->c_str();
+		m_Artist = item->strArtist->c_str();
+		m_Album = item->strAlbum->c_str();
+		m_Registrant = item->strRegisterFirstName->c_str();
+		m_Lyric = item->strLyric->c_str();
+
+		if(!m_Album.compare(m_Title))
+			m_Album.clear();
+		m_nInfoID = -1;
+	}
+	else{
+		m_Title = item->strTitle->c_str();
+		m_Artist = item->strArtist->c_str();
+		m_Album = item->strAlbum->c_str();
+		m_Registrant = item->strRegisterFirstName->c_str();
+		m_Lyric = item->strLyric->c_str();
+		m_nInfoID = boost::lexical_cast<int>(item->strInfoID->c_str());
+	}
+	Split("<br>");
+}
+
+AlsongLyric::AlsongLyric(const ns1__ST_USCOREGET_USCORERESEMBLELYRIC2_USCORERETURN& Response)
+{
+	if(!Response.strInfoID->c_str()){
+		m_Title = Response.strTitle->c_str();
+		m_Artist = Response.strArtistName->c_str();
+		m_Album = Response.strAlbumName->c_str();
+		m_Registrant = Response.strRegisterFirstName->c_str();
+		m_Lyric = Response.strLyric->c_str();
+
+		if(!m_Album.compare(m_Title))
+			m_Album.clear();
+		m_nInfoID = -1;
+	}
+	else{
+		m_Title = Response.strTitle->c_str();
+		m_Artist = Response.strArtistName->c_str();
+		m_Album = Response.strAlbumName->c_str();
+		m_Registrant = Response.strRegisterFirstName->c_str();
+		m_Lyric = Response.strLyric->c_str();
+		m_nInfoID = boost::lexical_cast<int>(Response.strInfoID->c_str());
+	}
 	Split("<br>");
 }
