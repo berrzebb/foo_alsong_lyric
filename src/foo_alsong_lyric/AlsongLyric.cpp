@@ -69,3 +69,16 @@ AlsongLyric::AlsongLyric(const ns1__ST_USCOREGET_USCORERESEMBLELYRIC2_USCORERETU
 	}
 	Split("<br>");
 }
+
+AlsongLyric::AlsongLyric(const AlsongLyric& other) : Lyric(other),m_nInfoID(other.m_nInfoID)
+{
+	if(!m_Album.compare(m_Title))
+		m_Album.clear();
+	Split("<br>");	
+}
+AlsongLyric::AlsongLyric(const Lyric& other) : Lyric(other)
+{
+	if(!m_Album.compare(m_Title))
+		m_Album.clear();
+	Split("<br>");
+}

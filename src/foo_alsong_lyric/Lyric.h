@@ -49,6 +49,7 @@ protected:
 public:
 	Lyric();
 	Lyric(const char *raw);
+	Lyric(const Lyric& other);
 	~Lyric();
 
 	void Clear();

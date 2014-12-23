@@ -18,7 +18,6 @@
 #include "stdafx.h"
 
 #include "Lyric.h"
-#include "pugixml/pugixml.hpp"
 
 Lyric::Lyric()
 {
@@ -28,6 +27,11 @@ Lyric::Lyric()
 Lyric::Lyric(const char *raw)
 {
 	m_Lyric = raw;
+	Split("\r\n");
+}
+
+Lyric::Lyric(const Lyric& other) : m_Album(other.m_Album),m_Artist(other.m_Artist),m_Lyric(other.m_Lyric),m_Registrant(other.m_Registrant),m_Title(other.m_Title)
+{
 	Split("\r\n");
 }
 

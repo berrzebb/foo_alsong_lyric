@@ -51,7 +51,9 @@ DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 		if(!StrCmpIA(fmt, "cue"))
 		{
 			file_info_impl info;
-			track->get_info(info);
+			if(!track->get_info_async(info)){
+				return false;
+			}
 			const char *realfile = info.info_get("referenced_file");
 			const char *ttmp = info.info_get("referenced_offset");
 			int m, s, ms;
@@ -248,7 +250,26 @@ boost::shared_ptr<Lyric> LyricSourceAlsong::Get(const metadb_handle_ptr &track)
 
 	try
 	{
-		return boost::shared_ptr<Lyric>(new AlsongLyric(Response));
+		if(Response.GetLyric8Result == NULL) return boost::shared_ptr<Lyric>();
+		if(boost::lexical_cast<int>(Response.GetLyric8Result->strInfoID->c_str()) != -1){
+			return boost::shared_ptr<Lyric>(new AlsongLyric(Response));
+		}else{
+			service_ptr_t<titleformat_object> to;
+			pfc::string8 title;
+			pfc::string8 artist;
+
+			static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%title%");
+			track->format_title(NULL, title, to, NULL);
+			static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%artist%");
+			track->format_title(NULL, artist, to, NULL);
+			boost::shared_ptr<LyricSearchResultAlsong> Result(Interface.GetResembleLyric2(artist.get_ptr(),title.get_ptr()));
+			AlsongLyric lyric(static_cast<AlsongLyric>(*Result->Get()));
+			if(!lyric.HasLyric()){
+				return boost::shared_ptr<Lyric>();
+			}else{
+				return boost::shared_ptr<Lyric>(new AlsongLyric(lyric));
+			}
+		}
 	}
 	catch(...)
 	{

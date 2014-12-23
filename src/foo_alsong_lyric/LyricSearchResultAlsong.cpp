@@ -28,11 +28,14 @@ LyricSearchResultAlsong::LyricSearchResultAlsong(std::vector<AlsongLyric> data)
 
 Lyric *LyricSearchResultAlsong::Get()
 {
-	if(m_LyricNode == m_Document.end()){return dynamic_cast<Lyric *>(&m_LyricResultMap.find(-1)->second);}
-	AlsongLyric ret(*m_LyricNode);
-	m_LyricResultMap[ret.GetInternalID()] = ret;
-	m_LyricNode++;
-	return dynamic_cast<Lyric *>(&m_LyricResultMap.find(ret.GetInternalID())->second);
+	if(m_LyricNode != m_Document.end() || m_LyricNode == m_Document.begin()){
+		AlsongLyric ret(*m_LyricNode);
+		m_LyricResultMap[ret.GetInternalID()] = ret;
+		m_LyricNode++;
+		return dynamic_cast<Lyric *>(&m_LyricResultMap.find(ret.GetInternalID())->second);
+	}else{
+		return dynamic_cast<Lyric *>(&m_LyricResultMap.find(-1)->second);
+	}
 }
 
 Lyric *LyricSearchResultAlsong::Get(int id)

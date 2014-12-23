@@ -32,7 +32,6 @@ LyricManager::LyricManager() : m_Seconds(0)
 {
 	static_api_ptr_t<play_callback_manager> pcm;
 	pcm->register_callback(this, flag_on_playback_all, false);
-
 	// Initialize lyric source
 	std::vector<GUID> enabledsources = cfg_enabledlyricsource.get_value();
 	for(std::vector<GUID>::iterator it = enabledsources.begin(); it != enabledsources.end(); it ++)
@@ -386,7 +385,6 @@ DWORD LyricManager::FetchLyric(const metadb_handle_ptr &track)
 				Status.append(nonLyric.get_ptr());
 				wBuf = Status.get_ptr();
 			}
-
 		}else{
 			service_ptr_t<titleformat_object> to;
 			pfc::string8 title;

@@ -68,7 +68,6 @@ int CAlsongInterface::GetResembleLyric2Count( std::string artist,std::string Tit
 	delete Request;
 	return boost::lexical_cast<int>(Response.GetResembleLyric2CountResult->strResembleLyricCount->c_str());
 }
-
 LyricSearchResultAlsong* CAlsongInterface::GetResembleLyric2( std::string artist,std::string Title,int nPage )
 {
 	boost::mutex AlsongMutex;
@@ -83,7 +82,7 @@ LyricSearchResultAlsong* CAlsongInterface::GetResembleLyric2( std::string artist
 	delete Request;
 
 	std::vector<AlsongLyric> LyricList;
-	if(!Response.GetResembleLyric2Result) {
+	if(!Response.GetResembleLyric2Result){
 		LyricList.emplace_back(AlsongLyric());
 		return new LyricSearchResultAlsong(LyricList);
 	}
@@ -91,7 +90,8 @@ LyricSearchResultAlsong* CAlsongInterface::GetResembleLyric2( std::string artist
 	auto Result = Response.GetResembleLyric2Result->ST_USCOREGET_USCORERESEMBLELYRIC2_USCORERETURN;
 	if(Result.empty()){
 		AlsongMutex.unlock();
-		return NULL;
+		LyricList.emplace_back(AlsongLyric());
+		return new LyricSearchResultAlsong(LyricList);
 	}
 	while(Result.size()){
 		auto item = Result.back();
