@@ -193,6 +193,7 @@ public:
 	inline bool are_parallel_reads_slow() {return (get_flags() & flag_parallel_reads_slow) != 0;}
 
 	static bool g_find_service_by_path(service_ptr_t<input_entry> & p_out,const char * p_path);
+    static bool g_find_service_by_path(service_ptr_t<input_entry> & p_out,const char * p_path, const char * p_ext);
 	static bool g_find_service_by_content_type(service_ptr_t<input_entry> & p_out,const char * p_content_type);
 	static void g_open_for_decoding(service_ptr_t<input_decoder> & p_instance,service_ptr_t<file> p_filehint,const char * p_path,abort_callback & p_abort,bool p_from_redirect = false);
 	static void g_open_for_info_read(service_ptr_t<input_info_reader> & p_instance,service_ptr_t<file> p_filehint,const char * p_path,abort_callback & p_abort,bool p_from_redirect = false);

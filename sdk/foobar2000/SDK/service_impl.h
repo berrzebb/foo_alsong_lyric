@@ -5,13 +5,13 @@ class service_impl_t : public T
 {
 public:
 	int service_release() throw() {
-		int ret = --m_counter; 
+		int ret = (int) --m_counter;
 		if (ret == 0) {
 			PFC_ASSERT_NO_EXCEPTION( delete this );
 		}
 		return ret;
 	}
-	int service_add_ref() throw() {return ++m_counter;}
+	int service_add_ref() throw() {return (int) ++m_counter;}
 
 	TEMPLATE_CONSTRUCTOR_FORWARD_FLOOD(service_impl_t,T)
 private:

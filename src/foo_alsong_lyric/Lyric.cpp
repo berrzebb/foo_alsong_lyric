@@ -26,11 +26,11 @@ Lyric::Lyric()
 
 Lyric::Lyric(const char *raw)
 {
-	m_Lyric = raw;
+	Info.sLyric = raw;
 	Split("\r\n");
 }
 
-Lyric::Lyric(const Lyric& other) : m_Album(other.m_Album),m_Artist(other.m_Artist),m_Lyric(other.m_Lyric),m_Registrant(other.m_Registrant),m_Title(other.m_Title)
+Lyric::Lyric(const Lyric& other) : Info(other.Info)
 {
 	Split("\r\n");
 }
@@ -42,28 +42,24 @@ Lyric::~Lyric()
 
 DWORD Lyric::Split(const char *Delimiter)
 {
-	int i;
-
 	m_LyricLines.clear();
 
-	const char *nowpos = m_Lyric.c_str();
+	const char *nowpos = Info.sLyric.data();
 	const char *lastpos = nowpos;
 	int delimlen = lstrlenA(Delimiter);
 	unsigned int pos;
-	for(i = 0; ; i ++) //<br>자르기
+	while(pos = boost::find_first(nowpos, Delimiter).end() - nowpos) //<br>자르기
 	{
-		pos = boost::find_first(nowpos, Delimiter).end() - nowpos;
-		if(pos <= 10)
-			break;
+		if(pos <= 10) break;
 		nowpos = nowpos + pos;
 
 		int time = StrToIntA(lastpos + 1) * 60 * 100 + StrToIntA(lastpos + 4) * 100 + StrToIntA(lastpos + 7);
 		lastpos += 10; //strlen("[34:56.78]");
 
-		std::string temp = std::string(lastpos, nowpos - lastpos - delimlen);
+		std::string temp(lastpos, nowpos - lastpos - delimlen);
 		if(temp.length() == 0)
 			temp = " ";
-		m_LyricLines.emplace_back(LyricLine(time, temp));
+		m_LyricLines.emplace_back(time, temp);
 		lastpos = nowpos;
 	}
 
@@ -74,11 +70,7 @@ DWORD Lyric::Split(const char *Delimiter)
 
 void Lyric::Clear()
 {
-	m_Title.clear();
-	m_Album.clear();
-	m_Artist.clear();
-	m_Registrant.clear();
-	m_Lyric.clear();
+	Info.clear();
 	m_LyricLines.clear();
 	m_LyricIterator = m_LyricLines.begin();
 }
@@ -86,8 +78,8 @@ void Lyric::Clear()
 std::vector<LyricLine>::const_iterator Lyric::GetIteratorAt(unsigned int time) const
 {
 	std::vector<LyricLine>::const_iterator it;
-	for(it = m_LyricLines.begin(); it != m_LyricLines.end() && it->time < time; it ++);
-	
+	for(it = m_LyricLines.cbegin(); it != m_LyricLines.cend() && it->time < time; ++it);
+
 	return it;
 }
 
@@ -97,7 +89,7 @@ int Lyric::IsValidIterator(std::vector<LyricLine>::const_iterator it) const
 	{
 		if(!it._Ptr)
 			return false;
-		return std::find(m_LyricLines.begin(), m_LyricLines.end(), *it) != m_LyricLines.end();
+		return std::find(m_LyricLines.cbegin(), m_LyricLines.cend(), *it) != m_LyricLines.cend();
 	}
 	catch(...)
 	{

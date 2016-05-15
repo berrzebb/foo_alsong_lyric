@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#ifdef _WIN32
+
 static bool g_is_enabled()
 {
 	return standard_config_objects::query_remember_window_positions();
@@ -73,8 +75,6 @@ bool cfg_window_placement::on_window_creation(HWND window)
 	{
 		if (m_data.length==sizeof(m_data) && test_rect(&m_data.rcNormalPosition))
 		{
-			if(m_data.showCmd != 0)
-				m_data.showCmd = 0; //dlunch: bugfix
 			if (SetWindowPlacement(window,&m_data))
 			{
 				ret = true;
@@ -213,3 +213,4 @@ void cfg_window_size::set_data_raw(stream_reader * p_stream,t_size p_sizehint,ab
 
 	m_width = width; m_height = height;
 }
+#endif // _WIN32

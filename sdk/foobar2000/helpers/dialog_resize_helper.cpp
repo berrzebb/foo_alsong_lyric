@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "dialog_resize_helper.h"
 
+#ifdef _WIN32
+
 BOOL GetChildWindowRect(HWND wnd,UINT id,RECT* child)
 {
 	RECT temp;
@@ -158,3 +160,5 @@ dialog_resize_helper::dialog_resize_helper(const param * src,unsigned count,unsi
 dialog_resize_helper::~dialog_resize_helper()
 {
 }
+
+#endif // _WIN32

@@ -34,23 +34,23 @@ LyricManager::LyricManager() : m_Seconds(0)
 	pcm->register_callback(this, flag_on_playback_all, false);
 	// Initialize lyric source
 	std::vector<GUID> enabledsources = cfg_enabledlyricsource.get_value();
-	for(std::vector<GUID>::iterator it = enabledsources.begin(); it != enabledsources.end(); it ++)
+	for(auto guid : enabledsources)
 	{
-		boost::shared_ptr<LyricSource> src = LyricSourceManager::Get(*it);
+		boost::shared_ptr<LyricSource> src = LyricSourceManager::Get(guid);
 		if(src)
 		{
-			src->SetConfig(cfg_lyricsourcecfg.get_value(*it));
+			src->SetConfig(cfg_lyricsourcecfg.get_value(guid));
 			m_lyricSources.emplace_back(src);
 		}
 	}
 
 	std::vector<GUID> savesources = cfg_enabledlyricsave.get_value();
-	for(std::vector<GUID>::iterator it = savesources.begin(); it != savesources.end(); it ++)
+	for(auto guid : savesources)
 	{
-		boost::shared_ptr<LyricSource> src = LyricSourceManager::Get(*it);
+		boost::shared_ptr<LyricSource> src = LyricSourceManager::Get(guid);
 		if(src)
 		{
-			src->SetConfig(cfg_lyricsourcecfg.get_value(*it));
+			src->SetConfig(cfg_lyricsourcecfg.get_value(guid));
 			m_lyricSaveSources.emplace_back(src);
 		}
 	}
@@ -59,9 +59,9 @@ LyricManager::LyricManager() : m_Seconds(0)
 	{
 		//default
 		std::vector<boost::shared_ptr<LyricSource> > list = LyricSourceManager::List();
-		for(std::vector<boost::shared_ptr<LyricSource> >::iterator it = list.begin(); it != list.end(); it ++)
-			if((*it)->GetName() == "Alsong Lyric")
-				cfg_enabledlyricsource.add((*it)->GetGUID());
+		for(auto src : list)
+			if(!src->GetName().compare("Alsong Lyric"))
+				cfg_enabledlyricsource.add(src->GetGUID());
 		UpdateConfig();
 	}
 }
@@ -90,23 +90,23 @@ void LyricManager::UpdateConfig()
 	m_lyricSources.clear();
 	m_lyricSaveSources.clear();
 	std::vector<GUID> enabledsources = cfg_enabledlyricsource.get_value();
-	for(std::vector<GUID>::iterator it = enabledsources.begin(); it != enabledsources.end(); it ++)
+	for(auto guid : enabledsources)
 	{
-		boost::shared_ptr<LyricSource> src = LyricSourceManager::Get(*it);
+		boost::shared_ptr<LyricSource> src = LyricSourceManager::Get(guid);
 		if(src)
 		{
-			src->SetConfig(cfg_lyricsourcecfg.get_value(*it));
+			src->SetConfig(cfg_lyricsourcecfg.get_value(guid));
 			m_lyricSources.emplace_back(src);
 		}
 	}
 
 	std::vector<GUID> savesources = cfg_enabledlyricsave.get_value();
-	for(std::vector<GUID>::iterator it = savesources.begin(); it != savesources.end(); it ++)
+	for(auto guid : savesources)
 	{
-		boost::shared_ptr<LyricSource> src = LyricSourceManager::Get(*it);
+		boost::shared_ptr<LyricSource> src = LyricSourceManager::Get(guid);
 		if(src)
 		{
-			src->SetConfig(cfg_lyricsourcecfg.get_value(*it));
+			src->SetConfig(cfg_lyricsourcecfg.get_value(guid));
 			m_lyricSaveSources.emplace_back(src);
 		}
 	}
@@ -203,9 +203,9 @@ void LyricManager::on_playback_pause(bool p_state)
 
 std::vector<LyricLine> LyricManager::GetLyricBefore(int n)
 {
+	std::vector<LyricLine> ret;
 	if(m_CurrentLyric && m_CurrentLyric->HasLyric() && m_CurrentLyric->IsValidIterator(m_LyricLine) && !m_CurrentLyric->IsBeginOfLyric(m_LyricLine))
 	{
-		std::vector<LyricLine> ret;
 		int cnt;
 		std::vector<LyricLine>::const_iterator it = m_LyricLine - 1;
 		for(cnt = 0; (cnt < n); cnt ++, it --)
@@ -219,32 +219,32 @@ std::vector<LyricLine> LyricManager::GetLyricBefore(int n)
 		}
 
 		std::reverse(ret.begin(), ret.end());
-
-		return ret;
 	}
-	return std::vector<LyricLine>();
+	return ret;
 }
 
 std::vector<LyricLine> LyricManager::GetLyric()
 {
+	std::vector<LyricLine> ret;
 	if(m_CurrentLyric && m_CurrentLyric->HasLyric() && m_CurrentLyric->IsValidIterator(m_LyricLine))
 	{
-		std::vector<LyricLine> ret;
+
 		std::vector<LyricLine>::const_iterator it;
 		for(it = m_LyricLine; !m_CurrentLyric->IsEndOfLyric(it) && it->time == m_LyricLine->time; it ++)
 			if((cfg_skipempty && boost::trim_copy(it->lyric).size() != 0) || !cfg_skipempty)
 				ret.emplace_back(*it);
-
-		return ret;
 	}
-	return std::vector<LyricLine>(1, LyricLine(0, m_Status));
+	if(ret.empty()){
+		ret.emplace_back(0,m_Status);
+	}
+	return ret;
 }
 
 std::vector<LyricLine> LyricManager::GetLyricAfter(int n)
 {
+	std::vector<LyricLine> ret;
 	if(m_CurrentLyric && m_CurrentLyric->HasLyric() && m_CurrentLyric->IsValidIterator(m_LyricLine) && !m_CurrentLyric->IsEndOfLyric(m_LyricLine))
 	{
-		std::vector<LyricLine> ret;
 		int cnt;
 		std::vector<LyricLine>::const_iterator it;
 		for(it = m_LyricLine + 1, cnt = 0; (cnt < n) && !m_CurrentLyric->IsEndOfLyric(it); cnt ++, it ++)
@@ -254,10 +254,8 @@ std::vector<LyricLine> LyricManager::GetLyricAfter(int n)
 			else if(cfg_skipempty) //empty line
 				cnt --;
 		}
-
-		return ret;
 	}
-	return std::vector<LyricLine>();
+	return ret;
 }
 
 void LyricManager::CountLyric()
@@ -321,11 +319,11 @@ std::pair<boost::shared_ptr<LyricSource>, boost::shared_ptr<Lyric> > LyricManage
 {
 	boost::shared_ptr<LyricSource> src;
 	boost::shared_ptr<Lyric> ret;
-	for(std::vector<boost::shared_ptr<LyricSource> >::iterator it = m_lyricSources.begin(); it != m_lyricSources.end(); it ++)
+	for(auto item : m_lyricSources)
 	{
 		try
 		{
-			ret = (*it)->Get(track);
+			ret = item->Get(track);
 			if(boost::this_thread::interruption_requested())
 				return std::make_pair(boost::shared_ptr<LyricSource>(), boost::shared_ptr<Lyric>());
 			if(!ret)
@@ -333,7 +331,7 @@ std::pair<boost::shared_ptr<LyricSource>, boost::shared_ptr<Lyric> > LyricManage
 
 			if(ret->HasLyric())
 			{
-				src = *it;
+				src = item;
 				break;
 			}
 		}
@@ -425,11 +423,11 @@ DWORD LyricManager::FetchLyric(const metadb_handle_ptr &track)
 
 void LyricManager::SaveLyric(const metadb_handle_ptr &track, std::pair<boost::shared_ptr<LyricSource>, boost::shared_ptr<Lyric> > lyricinfo)
 {
-	for(std::vector<boost::shared_ptr<LyricSource> >::iterator it = m_lyricSaveSources.begin(); it != m_lyricSaveSources.end(); it ++)
+	for(auto src : m_lyricSaveSources)
 	{
-		if((*it) == lyricinfo.first)
+		if(src == lyricinfo.first)
 			continue;
-		(*it)->Save(track, *lyricinfo.second.get());
+		src->Save(track, *lyricinfo.second.get());
 	}
 }
 

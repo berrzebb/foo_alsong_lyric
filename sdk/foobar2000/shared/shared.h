@@ -1,10 +1,13 @@
 #ifndef _SHARED_DLL__SHARED_H_
 #define _SHARED_DLL__SHARED_H_
 
-// Global flag - whether it's OK to leak static objects as they'll be released anyway by process death
-#define FB2K_LEAK_STATIC_OBJECTS 1
-
 #include "../../pfc/pfc.h"
+
+#include <assert.h>
+
+// Global flag - whether it's OK to leak static objects as they'll be released anyway by process death
+#define FB2K_LEAK_STATIC_OBJECTS PFC_LEAK_STATIC_OBJECTS 
+
 #include <signal.h>
 
 #ifndef WIN32
@@ -264,7 +267,11 @@ BOOL SHARED_EXPORT uModifyMenu(HMENU menu,UINT id,UINT flags,UINT newitem,const 
 UINT SHARED_EXPORT uGetMenuItemType(HMENU menu,UINT position);
 
 
+// New in 1.3.4
+// Load a system library safely - forcibly look in system directories, not elsewhere.
+HMODULE SHARED_EXPORT LoadSystemLibrary(const TCHAR * name);
 }//extern "C"
+
 static inline void uAddDebugEvent(const char * msg) {uPrintCrashInfo_OnEvent(msg, strlen(msg));}
 static inline void uAddDebugEvent(pfc::string_formatter const & msg) {uPrintCrashInfo_OnEvent(msg, msg.length());}
 
@@ -303,94 +310,6 @@ static pfc::string uGetDlgItemText(HWND wnd,UINT id) {
 }
 
 #define uMAKEINTRESOURCE(x) ((const char*)LOWORD(x))
-
-class _critical_section_base {
-protected:
-	CRITICAL_SECTION sec;
-public:
-	_critical_section_base() {}
-	inline void enter() throw() {EnterCriticalSection(&sec);}
-	inline void leave() throw() {LeaveCriticalSection(&sec);}
-	inline void create() throw() {InitializeCriticalSection(&sec);}
-	inline void destroy() throw() {DeleteCriticalSection(&sec);}
-private:
-	_critical_section_base(const _critical_section_base&);
-	void operator=(const _critical_section_base&);
-};
-
-// Static-lifetime critical section, no cleanup - valid until process termination
-class critical_section_static : public _critical_section_base {
-public:
-	critical_section_static() {create();}
-#if !FB2K_LEAK_STATIC_OBJECTS
-	~critical_section_static() {destroy();}
-#endif
-};
-
-// Regular critical section, intended for any lifetime scopes
-class critical_section : public _critical_section_base {
-private:
-	CRITICAL_SECTION sec;
-public:
-	critical_section() {create();}
-	~critical_section() {destroy();}
-};
-
-class c_insync
-{
-private:
-	_critical_section_base & m_section;
-public:
-	c_insync(_critical_section_base * p_section) throw() : m_section(*p_section) {m_section.enter();}
-	c_insync(_critical_section_base & p_section) throw() : m_section(p_section) {m_section.enter();}
-	~c_insync() throw() {m_section.leave();}
-};
-
-#define insync(X) c_insync blah____sync(X)
-
-
-class critical_section2	//smarter version, has try_enter()
-{
-private:
-	HANDLE hMutex;
-	int count;
-public:
-	int enter() {return enter_timeout(INFINITE);}
-	int leave() {int rv = --count;ReleaseMutex(hMutex);return rv;}
-	int get_lock_count() {return count;}
-	int get_lock_count_check()
-	{
-		int val = try_enter();
-		if (val>0) val = leave();
-		return val;
-	}
-	int enter_timeout(DWORD t) {return WaitForSingleObject(hMutex,t)==WAIT_OBJECT_0 ? ++count : 0;}
-	int try_enter() {return enter_timeout(0);}
-	int check_count() {enter();return leave();}
-	critical_section2()
-	{
-		hMutex = uCreateMutex(0,0,0);
-		count=0;
-	}
-	~critical_section2() {CloseHandle(hMutex);}
-
-	inline void assert_locked() {assert(get_lock_count_check()>0);}
-	inline void assert_not_locked() {assert(get_lock_count_check()==0);}
-
-};
-
-class c_insync2
-{
-private:
-	critical_section2 * ptr;
-public:
-	c_insync2(critical_section2 * p) {ptr=p;ptr->enter();}
-	c_insync2(critical_section2 & p) {ptr=&p;ptr->enter();}
-	~c_insync2() {ptr->leave();}
-};
-
-#define insync2(X) c_insync2 blah____sync2(X)
-
 
 //other
 
@@ -628,202 +547,10 @@ private:
 	bool m_initialized;
 };
 
-class LastErrorRevertScope {
-public:
-	LastErrorRevertScope() : m_val(GetLastError()) {}
-	~LastErrorRevertScope() {SetLastError(m_val);}
-
-private:
-	const DWORD m_val;
-};
-
-class format_win32_error {
-public:
-	format_win32_error(DWORD p_code) {
-		LastErrorRevertScope revert;
-		if (p_code == 0) m_buffer = "Undefined error";
-		else if (!uFormatSystemErrorMessage(m_buffer,p_code)) m_buffer << "Unknown error code (" << (unsigned)p_code << ")";
-	}
-
-	const char * get_ptr() const {return m_buffer.get_ptr();}
-	operator const char*() const {return m_buffer.get_ptr();}
-private:
-	pfc::string8 m_buffer;
-};
-
-class format_hresult {
-public:
-	format_hresult(HRESULT p_code) {
-		if (!uFormatSystemErrorMessage(m_buffer,(DWORD)p_code)) m_buffer = "Unknown error code";
-		stamp_hex(p_code);
-	}
-	format_hresult(HRESULT p_code, const char * msgOverride) {
-		m_buffer = msgOverride;
-		stamp_hex(p_code);
-	}
-
-	const char * get_ptr() const {return m_buffer.get_ptr();}
-	operator const char*() const {return m_buffer.get_ptr();}
-private:
-	void stamp_hex(HRESULT p_code) {m_buffer << " (0x" << pfc::format_hex((t_uint32)p_code, 8) << ")";}
-	pfc::string_formatter m_buffer;
-};
-
-struct exception_win32 : public std::exception {
-	exception_win32(DWORD p_code) : std::exception(format_win32_error(p_code)), m_code(p_code) {}
-	DWORD get_code() const {return m_code;}
-private:
-	DWORD m_code;
-};
-
-class uDebugLog : public pfc::string_formatter {
-public:
-	~uDebugLog() {*this << "\n"; uOutputDebugString(get_ptr());}
-};
-
-static void uAddWindowStyle(HWND p_wnd,LONG p_style) {
-	SetWindowLong(p_wnd,GWL_STYLE, GetWindowLong(p_wnd,GWL_STYLE) | p_style);
-}
-
-static void uRemoveWindowStyle(HWND p_wnd,LONG p_style) {
-	SetWindowLong(p_wnd,GWL_STYLE, GetWindowLong(p_wnd,GWL_STYLE) & ~p_style);
-}
-
-static void uAddWindowExStyle(HWND p_wnd,LONG p_style) {
-	SetWindowLong(p_wnd,GWL_EXSTYLE, GetWindowLong(p_wnd,GWL_EXSTYLE) | p_style);
-}
-
-static void uRemoveWindowExStyle(HWND p_wnd,LONG p_style) {
-	SetWindowLong(p_wnd,GWL_EXSTYLE, GetWindowLong(p_wnd,GWL_EXSTYLE) & ~p_style);
-}
-
-static unsigned MapDialogWidth(HWND p_dialog,unsigned p_value) {
-	RECT temp;
-	temp.left = 0; temp.right = p_value; temp.top = temp.bottom = 0;
-	if (!MapDialogRect(p_dialog,&temp)) return 0;
-	return temp.right;
-}
-
-static bool IsKeyPressed(unsigned vk) {
-	return (GetKeyState(vk) & 0x8000) ? true : false;
-}
-
-//! Returns current modifier keys pressed, using win32 MOD_* flags.
-static unsigned GetHotkeyModifierFlags() {
-	unsigned ret = 0;
-	if (IsKeyPressed(VK_CONTROL)) ret |= MOD_CONTROL;
-	if (IsKeyPressed(VK_SHIFT)) ret |= MOD_SHIFT;
-	if (IsKeyPressed(VK_MENU)) ret |= MOD_ALT;
-	if (IsKeyPressed(VK_LWIN) || IsKeyPressed(VK_RWIN)) ret |= MOD_WIN;
-	return ret;
-}
-
-class CClipboardOpenScope {
-public:
-	CClipboardOpenScope() : m_open(false) {}
-	~CClipboardOpenScope() {Close();}
-	bool Open(HWND p_owner) {
-		Close();
-		if (OpenClipboard(p_owner)) {
-			m_open = true;
-			return true;
-		} else {
-			return false;
-		}
-	}
-	void Close() {
-		if (m_open) {
-			m_open = false;
-			CloseClipboard();
-		}
-	}
-private:
-	bool m_open;
-	
-	PFC_CLASS_NOT_COPYABLE_EX(CClipboardOpenScope)
-};
-
-class CGlobalLockScope {
-public:
-	CGlobalLockScope(HGLOBAL p_handle) : m_handle(p_handle), m_ptr(GlobalLock(p_handle)) {
-		if (m_ptr == NULL) throw std::bad_alloc();
-	}
-	~CGlobalLockScope() {
-		if (m_ptr != NULL) GlobalUnlock(m_handle);
-	}
-	void * GetPtr() const {return m_ptr;}
-	t_size GetSize() const {return GlobalSize(m_handle);}
-private:
-	void * m_ptr;
-	HGLOBAL m_handle;
-
-	PFC_CLASS_NOT_COPYABLE_EX(CGlobalLockScope)
-};
-
-template<typename TItem> class CGlobalLockScopeT {
-public:
-	CGlobalLockScopeT(HGLOBAL handle) : m_scope(handle) {}
-	TItem * GetPtr() const {return reinterpret_cast<TItem*>(m_scope.GetPtr());}
-	t_size GetSize() const {
-		const t_size val = m_scope.GetSize();
-		PFC_ASSERT( val % sizeof(TItem) == 0 );
-		return val / sizeof(TItem);
-	}
-private:
-	CGlobalLockScope m_scope;
-};
-
-
-static bool IsPointInsideControl(const POINT& pt, HWND wnd) {
-	HWND walk = WindowFromPoint(pt);
-	for(;;) {
-		if (walk == NULL) return false;
-		if (walk == wnd) return true;
-		if (GetWindowLong(walk,GWL_STYLE) & WS_POPUP) return false;
-		walk = GetParent(walk);
-	}
-}
-
-static bool IsWindowChildOf(HWND child, HWND parent) {
-	HWND walk = child;
-	while(walk != parent && walk != NULL && (GetWindowLong(walk,GWL_STYLE) & WS_CHILD) != 0) {
-		walk = GetParent(walk);
-	}
-	return walk == parent;
-}
 
 
 #include "audio_math.h"
 #include "win32_misc.h"
-
-template<typename TPtr>
-class CoTaskMemObject {
-public:
-	CoTaskMemObject() : m_ptr() {}
-
-	~CoTaskMemObject() {CoTaskMemFree(m_ptr);}
-	void Reset() {CoTaskMemFree(pfc::replace_null_t(m_ptr));}
-	TPtr * Receive() {Reset(); return &m_ptr;}
-
-	TPtr m_ptr;
-	PFC_CLASS_NOT_COPYABLE(CoTaskMemObject, CoTaskMemObject<TPtr> );
-};
-
-
-    
-
-static HMODULE LoadSystemLibrary(const TCHAR * name) {
-	pfc::array_t<TCHAR> buffer; buffer.set_size( MAX_PATH + _tcslen(name) + 2 );
-	TCHAR * bufptr = buffer.get_ptr();
-	if (GetSystemDirectory(bufptr, MAX_PATH) == 0) return NULL;
-	bufptr[MAX_PATH] = 0;
-
-	size_t idx = _tcslen(bufptr);
-	if (idx > 0 && bufptr[idx-1] != '\\') bufptr[idx++] = '\\';
-	_tcscpy(bufptr+idx, name);
-	
-	return LoadLibrary(bufptr);
-}
 
 #include "fb2kdebug.h"
 

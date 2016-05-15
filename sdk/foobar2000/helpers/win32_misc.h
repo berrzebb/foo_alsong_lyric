@@ -52,109 +52,9 @@ private:
 
 
 
-template<typename t_object>
-class syncd_storage {
-private:
-	typedef syncd_storage<t_object> t_self;
-public:
-	syncd_storage() {}
-	template<typename t_source>
-	syncd_storage(const t_source & p_source) : m_object(p_source) {}
-	template<typename t_source>
-	void set(t_source const & p_in) {
-		insync(m_sync);
-		m_object = p_in;
-	}
-	template<typename t_destination>
-	void get(t_destination & p_out) const {
-		insync(m_sync);
-		p_out = m_object;
-	}
-	t_object get() const {
-		insync(m_sync);
-		return m_object;
-	}
-	template<typename t_source>
-	const t_self & operator=(t_source const & p_source) {set(p_source); return *this;}
-private:
-	mutable critical_section m_sync;
-	t_object m_object;
-};
-
-template<typename t_object>
-class syncd_storage_flagged {
-private:
-	typedef syncd_storage_flagged<t_object> t_self;
-public:
-	syncd_storage_flagged() : m_changed_flag(false) {}
-	template<typename t_source>
-	syncd_storage_flagged(const t_source & p_source) : m_changed_flag(false), m_object(p_source) {}
-	void set_changed(bool p_flag = true) {
-		insync(m_sync); 
-		m_changed_flag = p_flag;
-	}
-	template<typename t_source>
-	void set(t_source const & p_in) {
-		insync(m_sync);
-		m_object = p_in;
-		m_changed_flag = true;
-	}
-	bool has_changed() const {
-		insync(m_sync); 
-		return m_changed_flag;
-	}
-	t_object peek() const {insync(m_sync); return m_object;}
-	template<typename t_destination>
-	bool get_if_changed(t_destination & p_out) {
-		insync(m_sync);
-		if (m_changed_flag) {
-			p_out = m_object;
-			m_changed_flag = false;
-			return true;
-		} else {
-			return false;
-		}
-	}
-	t_object get() {
-		insync(m_sync);
-		m_changed_flag = false;
-		return m_object;
-	}
-	template<typename t_destination>
-	void get(t_destination & p_out) {
-		insync(m_sync);
-		p_out = m_object;
-		m_changed_flag = false;
-	}
-	template<typename t_source>
-	const t_self & operator=(t_source const & p_source) {set(p_source); return *this;}
-private:
-	bool m_changed_flag;
-	mutable critical_section m_sync;
-	t_object m_object;
-};
-
 typedef CGlobalLockScope CGlobalLock;//for compatibility, implementation moved elsewhere
 
-static bool SetClipboardDataBlock(UINT p_format,const void * p_block,t_size p_block_size) {
-	bool success = false;
-	if (OpenClipboard(NULL)) {
-		EmptyClipboard();
-		HANDLE handle = GlobalAlloc(GMEM_MOVEABLE,p_block_size);
-		if (handle == NULL) {
-			CloseClipboard();
-			throw std::bad_alloc();
-		}
-		{CGlobalLock lock(handle);memcpy(lock.GetPtr(),p_block,p_block_size);}
-		if (SetClipboardData(p_format,handle) == NULL) {
-			GlobalFree(handle);//todo?
-		} else {
-			success = true;
-		}
-		CloseClipboard();
-	}
-	return success;
-}
+bool SetClipboardDataBlock(UINT p_format,const void * p_block,t_size p_block_size);
 
 template<typename t_array>
 static bool SetClipboardDataBlock(UINT p_format,const t_array & p_array) {
@@ -236,136 +136,6 @@ static DWORD WS_EX_COMPOSITED_Safe() {
 #endif
 
 
-static t_size GetOptimalWorkerThreadCount() throw() {
-	DWORD_PTR mask,system;
-	t_size ret = 0;
-	GetProcessAffinityMask(GetCurrentProcess(),&mask,&system);
-	for(t_size n=0;n<sizeof(mask)*8;n++) {
-		if (mask & ((DWORD_PTR)1<<n)) ret++;
-	}
-	if (ret == 0) return 1;
-	return ret;
-}
-
-//! IMPORTANT: all classes derived from CVerySimpleThread must call WaitTillThreadDone() in their destructor, to avoid object destruction during a virtual function call!
-class CVerySimpleThread {
-public:
-	CVerySimpleThread() : m_thread(INVALID_HANDLE_VALUE), m_threadID() {}
-	~CVerySimpleThread() {WaitTillThreadDone();}
-	void StartThread(int priority) {
-		CloseThread();
-		HANDLE thread;
-		WIN32_OP( (thread = (HANDLE) _beginthreadex(NULL,0,g_entry,reinterpret_cast<void*>(this), CREATE_SUSPENDED ,&m_threadID) ) != INVALID_HANDLE_VALUE);
-		SetThreadPriority( thread, priority );
-		ResumeThread( thread );
-		m_thread = thread;
-	}
-	void StartThread() {
-		StartThread( ::GetThreadPriority(GetCurrentThread() ) );
-	}
-
-	bool IsThreadActive() const {
-		return m_thread != INVALID_HANDLE_VALUE;
-	}
-	void WaitTillThreadDone() {
-		CloseThread();
-	}
-protected:
-	virtual void ThreadProc() = 0;
-private:
-	void CloseThread() {
-		if (IsThreadActive()) {
-			int ctxPriority = GetThreadPriority( GetCurrentThread() );
-			if (ctxPriority > GetThreadPriority( m_thread ) ) SetThreadPriority( m_thread, ctxPriority );
-			fb2kWaitForThreadCompletion2(m_thread, m_thread, m_threadID);
-			//WaitForSingleObject(m_thread,INFINITE);
-			CloseHandle(m_thread); m_thread = INVALID_HANDLE_VALUE; m_threadID = 0;
-		}
-	}
-
-	static unsigned CALLBACK g_entry(void* p_instance) {
-		return reinterpret_cast<CVerySimpleThread*>(p_instance)->entry();
-	}
-	unsigned entry() {
-		try {
-			ThreadProc();
-		} catch(...) {}
-		return 0;
-	}
-	HANDLE m_thread;
-	unsigned m_threadID;
-
-	PFC_CLASS_NOT_COPYABLE_EX(CVerySimpleThread)
-};
-
-//! IMPORTANT: all classes derived from CSimpleThread must call AbortThread()/WaitTillThreadDone() in their destructors, to avoid object destruction during a virtual function call!
-class CSimpleThread : private completion_notify_receiver {
-public:
-	CSimpleThread() : m_thread(INVALID_HANDLE_VALUE), m_threadID() {}
-	~CSimpleThread() {AbortThread();}
-	void StartThread(int priority) {
-		AbortThread();
-		m_abort.reset();
-		m_ownNotify = create_task(0);
-		HANDLE thread;
-		WIN32_OP( (thread = (HANDLE) _beginthreadex(NULL,0,g_entry,reinterpret_cast<void*>(this), CREATE_SUSPENDED, &m_threadID) ) != INVALID_HANDLE_VALUE);
-		SetThreadPriority( thread, priority );
-		ResumeThread( thread );
-		m_thread = thread;
-	}
-	void StartThread() {
-		StartThread( GetThreadPriority( GetCurrentThread() ) );
-	}
-	void AbortThread() {
-		m_abort.abort();
-		CloseThread();
-	}
-	bool IsThreadActive() const {
-		return m_thread != INVALID_HANDLE_VALUE;
-	}
-	void WaitTillThreadDone() {
-		CloseThread();
-	}
-protected:
-	virtual unsigned ThreadProc(abort_callback & p_abort) = 0;
-	//! Called when the thread has completed normally, with p_code equal to ThreadProc retval. Not called when AbortThread() or WaitTillThreadDone() was used to abort the thread / wait for the thread to finish.
-	virtual void ThreadDone(unsigned p_code) {};
-private:
-	void CloseThread() {
-		if (IsThreadActive()) {
-			int ctxPriority = GetThreadPriority( GetCurrentThread() );
-			if (ctxPriority > GetThreadPriority( m_thread ) ) SetThreadPriority( m_thread, ctxPriority );
-			fb2kWaitForThreadCompletion2(m_thread, m_thread, m_threadID);
-			//WaitForSingleObject(m_thread,INFINITE);
-			CloseHandle(m_thread); m_thread = INVALID_HANDLE_VALUE; m_threadID = 0;
-		}
-		orphan_all_tasks();
-	}
-
-	void on_task_completion(unsigned p_id,unsigned p_status) {
-		if (IsThreadActive()) {
-			CloseThread();
-			ThreadDone(p_status);
-		}
-	}
-	static unsigned CALLBACK g_entry(void* p_instance) {
-		return reinterpret_cast<CSimpleThread*>(p_instance)->entry();
-	}
-	unsigned entry() {
-		unsigned code = ~0;
-		try {
-			code = ThreadProc(m_abort);
-		} catch(...) {}
-		if (!m_abort.is_aborting()) m_ownNotify->on_completion_async(code);
-		return code;
-	}
-	abort_callback_impl m_abort;
-	HANDLE m_thread;
-	unsigned m_threadID;
-	completion_notify_ptr m_ownNotify;
-
-	PFC_CLASS_NOT_COPYABLE_EX(CSimpleThread);
-};
 
 
 
@@ -513,20 +283,8 @@ public:
 
 class mutexScope {
 public:
-	mutexScope(HANDLE hMutex_, abort_callback & abort) : hMutex(hMutex_) {
-		HANDLE h[2] = {hMutex, abort.get_abort_event()};
-		switch( WaitForMultipleObjects(2, h, FALSE, INFINITE) ) {
-		case WAIT_OBJECT_0:
-			break; // and enter
-		case WAIT_OBJECT_0+1:
-			throw exception_aborted();
-		default:
-			uBugCheck();			
-		}
-	}
-	~mutexScope() {
-		ReleaseMutex(hMutex);
-	}
+	mutexScope(HANDLE hMutex_, abort_callback & abort);
+	~mutexScope();
 private:
 	PFC_CLASS_NOT_COPYABLE_EX(mutexScope);
 	HANDLE hMutex;
@@ -567,4 +325,50 @@ public:
 	HMODULE hMod;
 
 	PFC_CLASS_NOT_COPYABLE_EX(CDLL);
+};
+
+class winLocalFileScope {
+public:
+	void open( const char * inPath, file::ptr inReader, abort_callback & aborter);
+	void close();
+
+	winLocalFileScope() : m_isTemp() {}
+	winLocalFileScope( const char * inPath, file::ptr inReader, abort_callback & aborter ) : m_isTemp() {
+		open( inPath, inReader, aborter );
+	}
+
+	~winLocalFileScope() {
+		close();
+	}
+
+	const wchar_t * Path() const {return m_path.c_str();}
+private:
+	bool m_isTemp;
+	std::wstring m_path;
+};
+
+
+
+class CMutex {
+public:
+	CMutex(const TCHAR * name = NULL);
+	~CMutex();
+	HANDLE Handle() {return m_hMutex;}
+	static void AcquireByHandle( HANDLE hMutex, abort_callback & aborter );
+	void Acquire( abort_callback& aborter );
+	void Release();
+private:
+	CMutex(const CMutex&); void operator=(const CMutex&);
+	HANDLE m_hMutex;
+};
+
+class CMutexScope {
+public:
+	CMutexScope(CMutex & mutex, DWORD timeOutMS, const char * timeOutBugMsg);
+	CMutexScope(CMutex & mutex);
+	CMutexScope(CMutex & mutex, abort_callback & aborter);
+	~CMutexScope();
+private:
+	CMutexScope(const CMutexScope &); void operator=(const CMutexScope&);
+	CMutex & m_mutex;
 };

@@ -72,13 +72,21 @@ namespace boost
       BOOST_SYMBOL_VISIBLE
       invoker& operator=(BOOST_THREAD_RV_REF(invoker) f)
       {
-        f_ = boost::move(BOOST_THREAD_RV(f).f_);
+        if (this != &f)
+        {
+          f_ = boost::move(BOOST_THREAD_RV(f).f_);
+        }
+        return *this;
       }
 
       BOOST_SYMBOL_VISIBLE
       invoker& operator=( BOOST_THREAD_COPY_ASSIGN_REF(invoker) f)
       {
-        f_ = f.f_;
+        if (this != &f)
+        {
+          f_ = f.f_;
+        }
+        return *this;
       }
 
       result_type operator()()
@@ -134,7 +142,7 @@ namespace boost
   //BOOST_THREAD_DCL_MOVABLE_BEG(X) invoker<Fp> BOOST_THREAD_DCL_MOVABLE_END
 #else
 
-#if ! defined BOOST_MSVC
+#if ! defined BOOST_MSVC && defined(BOOST_THREAD_PROVIDES_INVOKE)
 
 #define BOOST_THREAD_RV_REF_ARG_T(z, n, unused) BOOST_PP_COMMA_IF(n) BOOST_THREAD_RV_REF(Arg##n)
 #define BOOST_THREAD_RV_REF_A_T(z, n, unused) BOOST_PP_COMMA_IF(n) BOOST_THREAD_RV_REF(A##n)

@@ -1,3 +1,7 @@
+
+// CPUID stuff supported only on MSVC for now, irrelevant for non x86
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64))
+#define PFC_HAVE_CPUID 1
 namespace pfc {
 	enum {
 		CPU_HAVE_3DNOW		= 1 << 0,
@@ -11,9 +15,9 @@ namespace pfc {
 	};
 
 	bool query_cpu_feature_set(unsigned p_value);
-
-
-	uint64_t GetCPUFeatureMask();
-
-	
 };
+#endif
+
+#ifndef PFC_HAVE_CPUID
+#define PFC_HAVE_CPUID 0
+#endif

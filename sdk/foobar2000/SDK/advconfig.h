@@ -142,8 +142,8 @@ public:
 	advconfig_checkbox_factory_t(const char * p_name,const GUID & p_guid,const GUID & p_parent,double p_priority,bool p_initialstate) 
 		: service_factory_single_t<advconfig_entry_checkbox_impl<p_is_radio, prefFlags> >(p_name,p_guid,p_parent,p_priority,p_initialstate) {}
 
-	bool get() const {return get_static_instance().get_state_();}
-	void set(bool val) {get_static_instance().set_state(val);}
+	bool get() const {return this->get_static_instance().get_state_();}
+	void set(bool val) {this->get_static_instance().set_state(val);}
 	operator bool() const {return get();}
 	bool operator=(bool val) {set(val); return val;}
 };

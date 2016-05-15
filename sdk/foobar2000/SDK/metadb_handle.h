@@ -1,5 +1,7 @@
 class titleformat_hook;
 class titleformat_text_filter;
+class titleformat_object;
+
 
 class metadb_info_container : public service_base {
 	FB2K_MAKE_SERVICE_INTERFACE(metadb_info_container, service_base);
@@ -27,7 +29,7 @@ public:
 	//! @param p_script Titleformat script to use. Use titleformat_compiler service to create one.
 	//! @param p_filter Optional callback object allowing input to be filtered according to context (i.e. removal of linebreak characters present in tags when rendering playlist lines). Set to NULL when not used.
 	//! @returns true on success, false when dummy file_info instance was used because actual info is was not (yet) known.
-	virtual bool format_title(titleformat_hook * p_hook,pfc::string_base & p_out,const service_ptr_t<class titleformat_object> & p_script,titleformat_text_filter * p_filter) = 0;
+	virtual bool format_title(titleformat_hook * p_hook,pfc::string_base & p_out,const service_ptr_t<titleformat_object> & p_script,titleformat_text_filter * p_filter) = 0;
 
 	//! OBSOLETE, DO NOT CALL
 	__declspec(deprecated) virtual void metadb_lock() = 0;
@@ -58,12 +60,12 @@ public:
 	__declspec(deprecated) virtual bool get_info_async_locked(const file_info * & p_info) const = 0;
 
 	//! Renders information about item referenced by this metadb_handle object, using external file_info data.
-	virtual void format_title_from_external_info(const file_info & p_info,titleformat_hook * p_hook,pfc::string_base & p_out,const service_ptr_t<class titleformat_object> & p_script,titleformat_text_filter * p_filter) = 0;
+	virtual void format_title_from_external_info(const file_info & p_info,titleformat_hook * p_hook,pfc::string_base & p_out,const service_ptr_t<titleformat_object> & p_script,titleformat_text_filter * p_filter) = 0;
 
 	//! OBSOLETE, DO NOT CALL
-	__declspec(deprecated) virtual bool format_title_nonlocking(titleformat_hook * p_hook,pfc::string_base & p_out,const service_ptr_t<class titleformat_object> & p_script,titleformat_text_filter * p_filter) = 0;
+	__declspec(deprecated) virtual bool format_title_nonlocking(titleformat_hook * p_hook,pfc::string_base & p_out,const service_ptr_t<titleformat_object> & p_script,titleformat_text_filter * p_filter) = 0;
 	//! OBSOLETE, DO NOT CALL
-	__declspec(deprecated) virtual void format_title_from_external_info_nonlocking(const file_info & p_info,titleformat_hook * p_hook,pfc::string_base & p_out,const service_ptr_t<class titleformat_object> & p_script,titleformat_text_filter * p_filter) = 0;
+	__declspec(deprecated) virtual void format_title_from_external_info_nonlocking(const file_info & p_info,titleformat_hook * p_hook,pfc::string_base & p_out,const service_ptr_t<titleformat_object> & p_script,titleformat_text_filter * p_filter) = 0;
 
 #if FOOBAR2000_TARGET_VERSION >= 76
 	//! New in 1.0
@@ -95,6 +97,11 @@ public:
 	virtual metadb_info_container::ptr get_info_ref() const = 0; 
 	//! Simplified method, always returns non-null, dummy info if nothing to return
 	virtual metadb_info_container::ptr get_async_info_ref() const = 0;  
+
+	//! \since 1.3
+	//! Retrieve full info using available means - read actual file if not cached. \n
+	//! Throws exceptions on failure.
+	metadb_info_container::ptr get_full_info_ref( abort_callback & aborter ) const;
 #endif
 
 	//! \since 1.3

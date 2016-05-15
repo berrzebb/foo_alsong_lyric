@@ -66,8 +66,8 @@ namespace pfc {
 		iterator(t_self const & other) : t_selfConst(other) {}
 		iterator(t_self && other) : t_selfConst(std::move(other)) {}
 
-		t_self const & operator=(t_self const & other) {m_content = other.m_content; return *this;}
-		t_self const & operator=(t_self && other) {m_content = std::move(other.m_content); return *this;}
+		t_self const & operator=(t_self const & other) {this->m_content = other.m_content; return *this;}
+		t_self const & operator=(t_self && other) {this->m_content = std::move(other.m_content); return *this;}
 
 		t_item& operator*() const throw() {return this->m_content->m_content;}
 		t_item* operator->() const throw() {return &this->m_content->m_content;}

@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 namespace listview_helper
 {
 	unsigned insert_item(HWND p_listview,unsigned p_index,const char * p_name,LPARAM p_param);//returns index of new item on success, infinite on failure
@@ -43,3 +45,5 @@ void ListView_GetContextMenuPoint(HWND p_list,LPARAM p_coords,POINT & p_point,in
 void ListView_GetContextMenuPoint(HWND p_list,POINT p_coords,POINT & p_point,int & p_selection);
 
 int ListView_GetColumnCount(HWND listView);
+
+#endif

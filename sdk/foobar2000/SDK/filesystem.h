@@ -59,6 +59,11 @@ namespace foobar2000_io
 	PFC_DECLARE_EXCEPTION(exception_io_disk_change,			exception_io,"Disc not available");
 	//! The directory is not empty.
 	PFC_DECLARE_EXCEPTION(exception_io_directory_not_empty,	exception_io,"Directory not empty");
+	//! A network connectivity error
+	PFC_DECLARE_EXCEPTION( exception_io_net, exception_io, "Connection error");
+	//! A network connectivity error, specifically a DNS query failure
+	PFC_DECLARE_EXCEPTION( exception_io_dns, exception_io_net, "DNS error");
+
 
 	//! Stores file stats (size and timestamp).
 	struct t_filestats {
@@ -132,6 +137,10 @@ namespace foobar2000_io
 		//! Helper function; reads a string of specified length from the stream.
 		pfc::string read_string_ex(t_size p_len,abort_callback & p_abort);
 
+		void read_string_nullterm( pfc::string_base & out, abort_callback & abort );
+
+		t_filesize skip_till_eof(abort_callback & abort);
+
 		template<typename t_outArray>
 		void read_till_eof(t_outArray & out, abort_callback & abort) {
 			pfc::assert_raw_type<typename t_outArray::t_item>();
@@ -187,6 +196,8 @@ namespace foobar2000_io
 
 		//! Helper function; writes raw string to the stream, with no length info or null terminators.
 		void write_string_raw(const char * p_string,abort_callback & p_abort);
+
+		void write_string_nullterm( const char * p_string, abort_callback & p_abort) {this->write( p_string, strlen(p_string)+1, p_abort); }
 	protected:
 		stream_writer() {}
 		~stream_writer() {}
@@ -262,7 +273,7 @@ namespace foobar2000_io
 		//! Indicates whether the file is a remote resource and non-sequential access may be slowed down by lag. This is typically returns to true on non-seekable sources but may also return true on seekable sources indicating that seeking is supported but will be relatively slow.
 		virtual bool is_remote() = 0;
 		
-		//! Retrieves file stats structure. Usese get_size() and get_timestamp().
+		//! Retrieves file stats structure. Uses get_size() and get_timestamp().
 		t_filestats get_stats(abort_callback & p_abort);
 
 		//! Returns whether read/write cursor position is at the end of file.
@@ -305,6 +316,7 @@ namespace foobar2000_io
 
 
 		t_filesize skip(t_filesize p_bytes,abort_callback & p_abort);
+		t_filesize skip_seek(t_filesize p_bytes,abort_callback & p_abort);
 
 		FB2K_MAKE_SERVICE_INTERFACE(file,service_base);
 	};
@@ -408,6 +420,9 @@ namespace foobar2000_io
 
 		static void g_get_canonical_path(const char * path,pfc::string_base & out);
 		static void g_get_display_path(const char * path,pfc::string_base & out);
+        //! Extracts the native filesystem path, sets out to the input path if native path cannot be extracted so the output is always set.
+        //! @returns True if native path was extracted successfully, false otherwise (but output is set anyway).
+        static bool g_get_native_path( const char * path, pfc::string_base & out);
 
 		static bool g_get_interface(service_ptr_t<filesystem> & p_out,const char * path);//path is AFTER get_canonical_path
 		static filesystem::ptr g_get_interface(const char * path);// throws exception_io_no_handler_for_path on failure
@@ -481,7 +496,7 @@ namespace foobar2000_io
 		pfc::list_t<pfc::rcptr_t<t_entry> > m_data;
 		bool m_recur;
 
-		static int sortfunc(const pfc::rcptr_t<const t_entry> & p1, const pfc::rcptr_t<const t_entry> & p2) {return stricmp_utf8(p1->m_path,p2->m_path);}
+		static int sortfunc(const pfc::rcptr_t<const t_entry> & p1, const pfc::rcptr_t<const t_entry> & p2) {return pfc::io::path::compare(p1->m_path,p2->m_path);}
 	public:
 		bool on_entry(filesystem * owner,abort_callback & p_abort,const char * url,bool is_subdirectory,const t_filestats & p_stats);
 
@@ -558,17 +573,17 @@ namespace foobar2000_io
 	void generate_temp_location_for_file(pfc::string_base & p_out, const char * p_origpath,const char * p_extension,const char * p_magic);
 
 
-	static file_ptr fileOpen(const char * p_path,filesystem::t_open_mode p_mode,abort_callback & p_abort,double p_timeout) {
+	inline file_ptr fileOpen(const char * p_path,filesystem::t_open_mode p_mode,abort_callback & p_abort,double p_timeout) {
 		file_ptr temp; filesystem::g_open_timeout(temp,p_path,p_mode,p_timeout,p_abort); PFC_ASSERT(temp.is_valid()); return temp;
 	}
 
-	static file_ptr fileOpenReadExisting(const char * p_path,abort_callback & p_abort,double p_timeout = 0) {
+	inline file_ptr fileOpenReadExisting(const char * p_path,abort_callback & p_abort,double p_timeout = 0) {
 		return fileOpen(p_path,filesystem::open_mode_read,p_abort,p_timeout);
 	}
-	static file_ptr fileOpenWriteExisting(const char * p_path,abort_callback & p_abort,double p_timeout = 0) {
+	inline file_ptr fileOpenWriteExisting(const char * p_path,abort_callback & p_abort,double p_timeout = 0) {
 		return fileOpen(p_path,filesystem::open_mode_write_existing,p_abort,p_timeout);
 	}
-	static file_ptr fileOpenWriteNew(const char * p_path,abort_callback & p_abort,double p_timeout = 0) {
+	inline file_ptr fileOpenWriteNew(const char * p_path,abort_callback & p_abort,double p_timeout = 0) {
 		return fileOpen(p_path,filesystem::open_mode_write_new,p_abort,p_timeout);
 	}
 	
@@ -640,6 +655,7 @@ namespace foobar2000_io
 
 	bool extract_native_path(const char * p_fspath,pfc::string_base & p_native);
 	bool _extract_native_path_ptr(const char * & p_fspath);
+	bool is_native_filesystem( const char * p_fspath );
 	bool extract_native_path_ex(const char * p_fspath, pfc::string_base & p_native);//prepends \\?\ where needed
 
 	template<typename T>
@@ -656,27 +672,9 @@ namespace foobar2000_io
 	}
 
 
-	static bool matchContentType(const char * fullString, const char * ourType) {
-		t_size lim = pfc::string_find_first(fullString, ';');
-		if (lim != ~0) {
-			while(lim > 0 && fullString[lim-1] == ' ') --lim;
-		}
-		return pfc::stricmp_ascii_ex(fullString,lim, ourType, ~0) == 0;
-	}
-	static bool matchProtocol(const char * fullString, const char * protocolName) {
-		const t_size len = strlen(protocolName);
-		if (pfc::stricmp_ascii_ex(fullString, len, protocolName, len) != 0) return false;
-		return fullString[len] == ':' && fullString[len+1] == '/' && fullString[len+2] == '/';
-	}
-	static void substituteProtocol(pfc::string_base & out, const char * fullString, const char * protocolName) {
-		const char * base = strstr(fullString, "://");
-		if (base) {
-			out = protocolName; out << base;
-		} else {
-			PFC_ASSERT(!"Should not get here");
-			out = fullString;
-		}
-	}
+	bool matchContentType(const char * fullString, const char * ourType);
+	bool matchProtocol(const char * fullString, const char * protocolName);
+	void substituteProtocol(pfc::string_base & out, const char * fullString, const char * protocolName);
 
 	void purgeOldFiles(const char * directory, t_filetimestamp period, abort_callback & abort);
 }

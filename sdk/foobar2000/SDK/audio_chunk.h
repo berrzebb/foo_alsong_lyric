@@ -46,12 +46,10 @@ public:
 	//! Helper function; determines channel map for the specified channel count according to Xiph specs. Throws exception_io_data on failure.
 	static unsigned g_guess_channel_config_xiph(unsigned count);
 
-#ifdef _WIN32
 	//! Helper function; translates audio_chunk channel map to WAVEFORMATEXTENSIBLE channel map.
-	static DWORD g_channel_config_to_wfx(unsigned p_config);
+	static uint32_t g_channel_config_to_wfx(unsigned p_config);
 	//! Helper function; translates WAVEFORMATEXTENSIBLE channel map to audio_chunk channel map.
-	static unsigned g_channel_config_from_wfx(DWORD p_wfx);
-#endif
+	static unsigned g_channel_config_from_wfx(uint32_t p_wfx);
 
 	//! Extracts flag describing Nth channel from specified map. Usable to figure what specific channel in a stream means.
 	static unsigned g_extract_channel_flag(unsigned p_config,unsigned p_index);
@@ -77,6 +75,8 @@ public:
 	virtual t_size get_data_size() const = 0;
 	//! Resizes audio data buffer to specified size. Throws std::bad_alloc on failure.
 	virtual void set_data_size(t_size p_new_size) = 0;
+	//! Sanity helper, same as set_data_size.
+	void allocate(size_t size) { set_data_size( size ); }
 	
 	//! Retrieves sample rate of contained audio data.
 	virtual unsigned get_srate() const = 0;
@@ -126,9 +126,15 @@ public:
 	
 	//! Returns whether the chunk contents are valid (for bug check purposes).
 	bool is_valid() const;
+    
+    //! Returns whether the chunk contains valid sample rate & channel info (but allows an empty chunk).
+    bool is_spec_valid() const;
 
 	//! Returns actual amount of audio data contained in the buffer (sample count * channel count). Must not be greater than data size (see get_data_size()).
-	inline t_size get_data_length() const {return get_sample_count() * get_channels();}
+	size_t get_used_size() const {return get_sample_count() * get_channels();}
+	//! Same as get_used_size(); old confusingly named version.
+	size_t get_data_length() const {return get_sample_count() * get_channels();}
+#pragma deprecated( get_data_length )
 
 	//! Resets all audio_chunk data.
 	inline void reset() {
@@ -178,6 +184,7 @@ public:
 	void insert_silence_fromstart(t_size samples);
 	t_size skip_first_samples(t_size samples);
 	void set_silence(t_size samples);
+	void set_silence_seconds( double seconds );
 
 	bool process_skip(double & skipDuration);
 
@@ -210,6 +217,21 @@ public:
 		copy(p_source);
 		return *this;
 	}
+
+	struct spec_t {
+		uint32_t sampleRate;
+		uint32_t chanCount, chanMask;
+		
+		static bool equals( const spec_t & v1, const spec_t & v2 );
+		bool operator==(const spec_t & other) const { return equals(*this, other);}
+		bool operator!=(const spec_t & other) const { return !equals(*this, other);}
+		bool is_valid() const;
+	};
+	static spec_t makeSpec(uint32_t rate, uint32_t channels);
+	static spec_t makeSpec(uint32_t rate, uint32_t channels, uint32_t chanMask);
+
+	spec_t get_spec() const;
+	void set_spec(const spec_t &);
 protected:
 	audio_chunk() {}
 	~audio_chunk() {}	
@@ -303,13 +325,9 @@ public:
 	void add(double v) {m_offset += v;}
 	void subtract(double v) {m_offset -= v;}
 
-	double query() const {
-		double acc = m_offset;
-		for(t_map::const_iterator walk = m_sampleCounts.first(); walk.is_valid(); ++walk) {
-			acc += audio_math::samples_to_time(walk->m_value, walk->m_key);
-		}
-		return acc;
-	}
+	double query() const;
+	uint64_t queryAsSampleCount( uint32_t rate );
+
 	void add(const audio_chunk & c) {
 		add(c.get_sample_count(), c.get_sample_rate());
 	}

@@ -1,8 +1,13 @@
 #include "pfc.h"
 
+
+#if PFC_HAVE_CPUID
+
 namespace pfc {
 	bool query_cpu_feature_set(unsigned p_value) {
+#ifdef _MSC_VER
 		__try {
+#endif
 			if (p_value & (CPU_HAVE_SSE | CPU_HAVE_SSE2 | CPU_HAVE_SSE3 | CPU_HAVE_SSSE3 | CPU_HAVE_SSE41 | CPU_HAVE_SSE42)) {
 				int buffer[4];
 				__cpuid(buffer,1);
@@ -41,8 +46,12 @@ namespace pfc {
 			}
 	#endif
 			return true;
+#ifdef _MSC_VER
 		} __except(1) {
 			return false;
 		}
+#endif
 	}
 }
+
+#endif

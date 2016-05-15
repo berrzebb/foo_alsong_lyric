@@ -40,7 +40,7 @@ namespace CF {
 	template<typename TWhat> class CallForwarderMaster : public CallForwarder<TWhat> {
 	public:
 		CallForwarderMaster(TWhat * ptr) : CallForwarder<TWhat>(ptr) {}
-		~CallForwarderMaster() { Orphan(); }
+		~CallForwarderMaster() { this->Orphan(); }
 
 		PFC_CLASS_NOT_COPYABLE(CallForwarderMaster, CallForwarderMaster<TWhat>);
 	};

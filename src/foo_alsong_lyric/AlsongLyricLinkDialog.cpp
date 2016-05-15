@@ -91,6 +91,12 @@ void AlsongLyricLinkDialog::PopulateListView()
 		item.mask = LVIF_TEXT;
 		item.pszText = const_cast<WCHAR *>(registrant.c_str());
 		ListView_SetItem(hListView, &item);
+		MSG msg;
+		while(::PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE))
+		{
+			::SendMessage(msg.hwnd, msg.message, msg.wParam, msg.lParam);
+		}
+
 	}while((lrc = m_searchresult->Get()), lrc->HasLyric());
 }
 

@@ -5,7 +5,7 @@ using namespace bitreader_helper;
 static unsigned extract_header_bits(const t_uint8 p_header[4],unsigned p_base,unsigned p_bits)
 {
 	assert(p_base+p_bits<=32);
-	return extract_bits(p_header,p_base,p_bits);
+	return (unsigned) extract_bits(p_header,p_base,p_bits);
 }
 
 namespace {
@@ -57,7 +57,7 @@ bool mp3_utils::ParseMPEGFrameHeader(TMPEGFrameInfo & p_info,const t_uint8 p_hea
 	unsigned protection = parser.read(1);
 	unsigned bitrate_index = parser.read(4);
 	unsigned sample_rate_index = parser.read(2);
-	if (sample_rate_index == 11) return false;//reserved
+	if (sample_rate_index == 3) return false;//reserved
 	unsigned paddingbit = parser.read(1);
 	int paddingdelta = 0;
 	parser.read(1);//private

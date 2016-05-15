@@ -24,8 +24,7 @@ private:
 	int m_nInfoID;
 public:
 	AlsongLyric(const AlsongLyric& other);
-	AlsongLyric(const ns1__ST_USCOREGET_USCORERESEMBLELYRIC2_USCORERETURN& Response);
-	AlsongLyric(const _ns1__GetLyric8Response& Response);
+	AlsongLyric(const AlsongLyricInfo& Response);
 	AlsongLyric() {}
 	AlsongLyric(const Lyric& other);
 	int GetInternalID() const

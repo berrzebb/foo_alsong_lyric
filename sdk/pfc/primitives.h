@@ -15,9 +15,13 @@
 #define TEMPLATE_CONSTRUCTOR_FORWARD_FLOOD(THISCLASS,MEMBER) TEMPLATE_CONSTRUCTOR_FORWARD_FLOOD_WITH_INITIALIZER(THISCLASS,MEMBER,{})
 
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 
-//Bah. I noticed the fact that std::exception carrying a custom message is MS-specific *after* making exception classes a part of ABI. To be nuked next time fb2k component backwards compatibility is axed.
+#ifndef _MSC_VER
+#error MSVC expected
+#endif
+
+// MSVC specific - part of fb2k ABI - cannot ever change on MSVC/Windows
 
 #define PFC_DECLARE_EXCEPTION(NAME,BASECLASS,DEFAULTMSG)	\
 class NAME : public BASECLASS {	\
@@ -70,7 +74,7 @@ namespace pfc {
 		}
 		char * m_message;
 	};
-	PFC_NORETURN template<typename t_exception> void throw_exception_with_message(const char * p_message) {
+	template<typename t_exception> PFC_NORETURN void throw_exception_with_message(const char * p_message) {
 		throw __exception_with_message_t<t_exception>(p_message);
 	}
 }
@@ -89,7 +93,7 @@ namespace pfc {
 	template<bool val> class static_assert_t;
 	template<> class static_assert_t<true> {};
 
-#define PFC_STATIC_ASSERT(X) { pfc::static_assert_t<(X)>(); }
+#define PFC_STATIC_ASSERT(X) { ::pfc::static_assert_t<(X)>(); }
 
 	template<typename t_type>
 	void assert_raw_type() {static_assert_t< !traits_t<t_type>::needs_constructor && !traits_t<t_type>::needs_destructor >();}
@@ -112,6 +116,7 @@ namespace pfc {
 		if (traits_t<t_type>::needs_constructor) {
 			t_type * ret = new(&p_item) t_type;
 			PFC_ASSERT(ret == &p_item);
+            (void) ret; // suppress warning
 		}
 	}
 
@@ -145,6 +150,7 @@ namespace pfc {
 		if (traits_t<t_type>::needs_constructor) {
 			t_type * ret = new(&p_item) t_type(p_copyfrom);
 			PFC_ASSERT(ret == &p_item);
+            (void) ret; // suppress warning
 		} else {
 			p_item = p_copyfrom;
 		}
@@ -681,7 +687,7 @@ namespace pfc {
 	template<typename t_type>
 	t_type replace_null_t(t_type & p_var) {
 		t_type ret = p_var;
-		p_var = NULL;
+		p_var = 0;
 		return ret;
 	}
 
@@ -703,8 +709,8 @@ namespace pfc {
 		array_rangecheck_t(p_array,p_from); array_rangecheck_t(p_array,p_to);
 	}
 
-	inline t_int32 rint32(double p_val) {return (t_int32) floor(p_val + 0.5);}
-	inline t_int64 rint64(double p_val) {return (t_int64) floor(p_val + 0.5);}
+	t_int32 rint32(double p_val);
+	t_int64 rint64(double p_val);
 
 
 
@@ -772,7 +778,7 @@ namespace pfc {
 	template<typename t_array>
 	class __list_to_array_enumerator {
 	public:
-		__list_to_array_enumerator(t_array & p_array) : m_array(p_array), m_walk(0) {}
+		__list_to_array_enumerator(t_array & p_array) : m_walk(), m_array(p_array) {}
 		template<typename t_item>
 		void operator() (const t_item & p_item) {
 			PFC_ASSERT(m_walk < m_array.get_size());
@@ -841,7 +847,7 @@ namespace pfc {
 		t_val & v;
 	};
 
-	static unsigned countBits32(uint32_t i) {
+	inline unsigned countBits32(uint32_t i) {
 		const uint32_t mask = 0x11111111;
 		uint32_t acc = i & mask;
 		acc += (i >> 1) & mask;
@@ -859,7 +865,12 @@ namespace pfc {
 		return (acc3 & 0xFFFF) + ((acc3 >> 16) & 0xFFFF);
 	}
 
+    // Forward declarations
+    template<typename t_to,typename t_from>
+	void copy_array_t(t_to & p_to,const t_from & p_from);
 
+	template<typename t_array,typename t_value>
+	void fill_array_t(t_array & p_array,const t_value & p_value);
 };
 
 

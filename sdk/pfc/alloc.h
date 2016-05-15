@@ -138,7 +138,7 @@ namespace pfc {
 	private:
 		typedef __array_fast_helper_t<t_item> t_self;
 	public:
-		__array_fast_helper_t() : m_buffer(NULL), m_size_total(0), m_size(0) {}
+		__array_fast_helper_t() : m_buffer(NULL), m_size(0), m_size_total(0) {}
 		
 
 		void set_size(t_size p_size,t_size p_size_total) {
@@ -449,7 +449,11 @@ namespace pfc {
 
 			enum { alloc_prioritizes_speed = false };
 
-			void move_from(t_self & other) { pfc::copy_array_t( *this, other ); }
+			void move_from(t_self & other) {
+                const size_t count = other.get_size();
+                set_size( count );
+                for(size_t w = 0; w < count; ++w) this->get_ptr()[w] = other.get_ptr()[w];
+            }
 		private:
 			alloc(const t_self&) {throw pfc::exception_not_implemented();}
 			const t_self& operator=(const t_self&) {throw pfc::exception_not_implemented();}

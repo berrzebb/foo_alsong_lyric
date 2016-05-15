@@ -64,7 +64,8 @@ static void g_write_tags_ex(tag_write_callback & p_callback,unsigned p_flags,con
 }
 
 static void g_write_tags(unsigned p_flags,const service_ptr_t<file> & p_file,const file_info * p_info,abort_callback & p_abort) {
-	g_write_tags_ex(tag_write_callback_dummy(),p_flags,p_file,p_info,p_abort);
+    tag_write_callback_dummy cb;
+	g_write_tags_ex(cb,p_flags,p_file,p_info,p_abort);
 }
 
 

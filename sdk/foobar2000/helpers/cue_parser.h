@@ -119,8 +119,15 @@ namespace file_info_record_helper {
 			p_info.reset();
 			p_info.set_length(m_length);
 			p_info.set_replaygain(m_replaygain);
-			m_info.enumerate(__file_info_record__info__enumerator(p_info));
-			m_meta.enumerate(__file_info_record__meta__enumerator(p_info));
+            
+            {
+                __file_info_record__info__enumerator e(p_info);
+                m_info.enumerate( e );
+            }
+            {
+                __file_info_record__meta__enumerator e(p_info);
+                m_meta.enumerate( e );
+            }
 		}
 
 		template<typename t_callback> void enumerate_meta(t_callback & p_callback) const {m_meta.enumerate(p_callback);}
@@ -199,7 +206,7 @@ namespace cue_parser
 		}
 
 		t_uint32 get_subsong_count() {
-			return m_meta.have_cuesheet() ? m_meta.get_cue_track_count() : 1;
+			return m_meta.have_cuesheet() ? (uint32_t) m_meta.get_cue_track_count() : 1;
 		}
 
 		t_uint32 get_subsong(t_uint32 p_index) {
@@ -364,7 +371,7 @@ namespace cue_parser
 			}
 			//stamp per-chapter infos
 			for(t_size walk = 0, total = p_list.get_chapter_count(); walk < total; ++walk) {
-				instance.retag_set_info(walk + 1, p_list.get_info(walk),p_abort);
+				instance.retag_set_info( (uint32_t)( walk + 1 ), p_list.get_info(walk),p_abort);
 			}
 
 			instance.retag_commit(p_abort);

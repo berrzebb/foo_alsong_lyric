@@ -100,6 +100,18 @@ void filesystem::g_get_display_path(const char * path,pfc::string_base & out)
 	}
 }
 
+bool filesystem::g_get_native_path( const char * path, pfc::string_base & out) {
+    // Is proper file:// path?
+    if (foobar2000_io::extract_native_path( path, out ) ) return true;
+
+    // Set anyway
+    out = path;
+    
+    // Maybe just a file:// less local path? Check for other protocol markers
+    // If no :// present, return true anyway
+    return strstr( path, "://" ) == NULL;
+}
+
 filesystem::ptr filesystem::g_get_interface(const char * path) {
 	filesystem::ptr rv;
 	if (!g_get_interface(rv, path)) throw exception_io_no_handler_for_path();
@@ -205,7 +217,7 @@ void filesystem::g_list_directory(const char * p_path,directory_callback & p_out
 static void path_pack_string(pfc::string_base & out,const char * src)
 {
 	out.add_char('|');
-	out << strlen(src);
+	out << (unsigned) strlen(src);
 	out.add_char('|');
 	out << src;
 	out.add_char('|');
@@ -467,7 +479,8 @@ bool filesystem::g_is_empty_directory(const char * path,abort_callback & p_abort
 
 bool filesystem::g_is_valid_directory(const char * path,abort_callback & p_abort) {
 	try {
-		g_list_directory(path,directory_callback_dummy(),p_abort);
+        directory_callback_dummy cb;
+		g_list_directory(path,cb,p_abort);
 		return true;
 	} catch(exception_io const &) {return false;}
 }
@@ -525,7 +538,8 @@ namespace {
 					file::g_transfer_object(r_src,r_dst,size,p_abort);
 				} catch(...) {
 					r_dst.release();
-					try {m_fs->remove(dst,abort_callback_dummy());} catch(...) {}
+                    abort_callback_dummy dummy;
+					try {m_fs->remove(dst,dummy);} catch(...) {}
 					throw;
 				}
 			}
@@ -566,7 +580,8 @@ void filesystem::g_copy(const char * src,const char * dst,abort_callback & p_abo
 			file::g_transfer_object(r_src,r_dst,size,p_abort);
 		} catch(...) {
 			r_dst.release();
-			try {g_remove(dst,abort_callback_dummy());} catch(...) {}
+            abort_callback_dummy dummy;
+			try {g_remove(dst,dummy);} catch(...) {}
 			throw;
 		}
 	}
@@ -629,7 +644,8 @@ void filesystem::g_open_tempmem(service_ptr_t<file> & p_out,abort_callback & p_a
 }
 
 file::ptr filesystem::g_open_tempmem() {
-	file::ptr f; g_open_tempmem(f, abort_callback_dummy()); return f;
+    abort_callback_dummy aborter;
+	file::ptr f; g_open_tempmem(f, aborter); return f;
 }
 
 void archive_impl::list_directory(const char * p_path,directory_callback & p_out,abort_callback & p_abort) {
@@ -667,9 +683,7 @@ bool file::is_eof(abort_callback & p_abort) {
 
 t_filetimestamp foobar2000_io::filetimestamp_from_system_timer()
 {
-	t_filetimestamp ret;
-	GetSystemTimeAsFileTime((FILETIME*)&ret);
-	return ret;
+    return pfc::fileTimeNow();
 }
 
 void stream_reader::read_string_ex(pfc::string_base & p_out,t_size p_bytes,abort_callback & p_abort) {
@@ -831,7 +845,8 @@ void file::ensure_seekable() {
 }
 
 bool filesystem::g_is_recognized_path(const char * p_path) {
-	return g_get_interface(service_ptr_t<filesystem>(),p_path);
+    filesystem::ptr obj;
+	return g_get_interface(obj,p_path);
 }
 
 t_filesize file::get_remaining(abort_callback & p_abort) {
@@ -894,6 +909,18 @@ void foobar2000_io::generate_temp_location_for_file(pfc::string_base & p_out, co
 	p_out += p_extension;
 }
 
+t_filesize file::skip_seek(t_filesize p_bytes,abort_callback & p_abort) {
+	const t_filesize size = get_size(p_abort);
+	if (size != filesize_invalid) {
+		const t_filesize position = get_position(p_abort);
+		const t_filesize toskip = pfc::min_t( p_bytes, size - position );
+		seek(position + toskip,p_abort);
+		return toskip;
+	} else {
+		this->seek_ex( p_bytes, seek_from_current, p_abort );
+		return p_bytes;
+	}
+}
 
 t_filesize file::skip(t_filesize p_bytes,abort_callback & p_abort) {
 	if (p_bytes > 1024 && can_seek()) {
@@ -906,6 +933,10 @@ t_filesize file::skip(t_filesize p_bytes,abort_callback & p_abort) {
 		}
 	}
 	return stream_reader::skip(p_bytes,p_abort);
+}
+
+bool foobar2000_io::is_native_filesystem( const char * p_fspath ) {
+	return _extract_native_path_ptr( p_fspath );
 }
 
 bool foobar2000_io::_extract_native_path_ptr(const char * & p_fspath) {
@@ -992,4 +1023,57 @@ void foobar2000_io::purgeOldFiles(const char * directory, t_filetimestamp period
 
 	myCallback cb(period);
 	filesystem::g_list_directory(directory, cb, abort);
+}
+
+void stream_reader::read_string_nullterm( pfc::string_base & out, abort_callback & abort ) {
+	enum { bufCount = 256 };
+	char buffer[bufCount];
+	out.reset();
+	size_t w = 0;
+	for(;;) {
+		char & c = buffer[w];
+		this->read_object( &c, 1, abort );
+		if (c == 0) {
+			out.add_string( buffer, w ); break;
+		}
+		if (++w == bufCount ) {
+			out.add_string( buffer, bufCount ); w = 0;
+		}
+	}
+}
+
+t_filesize stream_reader::skip_till_eof(abort_callback & abort) {
+	t_filesize atOnce = 1024 * 1024;
+	t_filesize done = 0;
+	for (;; ) {
+		abort.check();
+		t_filesize did = this->skip(atOnce, abort);
+		done += did;
+		if (did != atOnce) break;
+	}
+	return done;
+}
+
+
+
+bool foobar2000_io::matchContentType(const char * fullString, const char * ourType) {
+    t_size lim = pfc::string_find_first(fullString, ';');
+    if (lim != ~0) {
+        while(lim > 0 && fullString[lim-1] == ' ') --lim;
+    }
+    return pfc::stricmp_ascii_ex(fullString,lim, ourType, ~0) == 0;
+}
+bool foobar2000_io::matchProtocol(const char * fullString, const char * protocolName) {
+    const t_size len = strlen(protocolName);
+    if (pfc::stricmp_ascii_ex(fullString, len, protocolName, len) != 0) return false;
+    return fullString[len] == ':' && fullString[len+1] == '/' && fullString[len+2] == '/';
+}
+void foobar2000_io::substituteProtocol(pfc::string_base & out, const char * fullString, const char * protocolName) {
+    const char * base = strstr(fullString, "://");
+    if (base) {
+        out = protocolName; out << base;
+    } else {
+        PFC_ASSERT(!"Should not get here");
+        out = fullString;
+    }
 }

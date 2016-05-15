@@ -1,3 +1,11 @@
+#include <functional>
+
+namespace foobar2000_io {
+    typedef std::function< void (const char *, t_filestats const & , bool ) > listDirectoryFunc_t;
+    void listDirectory( const char * path, abort_callback & aborter, listDirectoryFunc_t func);
+}
+
+
 //helper
 class file_path_canonical {
 public:
@@ -126,14 +134,14 @@ public:
 		r = p_r;
 		begin = p_begin;
 		end = p_end;
-		r->seek(begin,p_abort);
+		reopen(p_abort);
 	}
 
 	void init(const service_ptr_t<file> & p_r,t_filesize p_begin,t_filesize p_end,abort_callback & p_abort) {
 		r = p_r;
 		begin = p_begin;
 		end = p_end;
-		r->seek(begin,p_abort);
+		reopen(p_abort);
 	}
 
 	t_filetimestamp get_timestamp(abort_callback & p_abort) {return r->get_timestamp(p_abort);}
@@ -159,7 +167,28 @@ public:
 	
 	bool get_content_type(pfc::string_base &) {return false;}
 
-	void reopen(abort_callback & p_abort) {seek(0,p_abort);}
+	void reopen(abort_callback & p_abort) {
+		seekInternal(begin, p_abort);
+	}
+private:
+	void seekInternal( t_filesize position, abort_callback & abort ) {
+		if (r->can_seek()) {
+			r->seek(position, abort);
+		} else {
+			t_filesize positionWas = r->get_position(abort);
+			if (positionWas == filesize_invalid || positionWas > position) {
+				r->reopen(abort);
+				try { r->skip_object(position, abort); }
+				catch (exception_io_data) { throw exception_io_seek_out_of_range(); }
+			} else {
+				t_filesize skipMe = position - positionWas;
+				if (skipMe > 0) {
+					try { r->skip_object(skipMe, abort); }
+					catch (exception_io_data) { throw exception_io_seek_out_of_range(); }
+				}
+			}
+		}
+	}
 };
 
 class stream_reader_memblock_ref : public stream_reader
@@ -392,7 +421,9 @@ public:
 		t_uint32 size; *this >> size; data.set_size(size);
 		for(t_uint32 walk = 0; walk < size; ++walk) *this >> data[walk];
 	}
-
+	void read_string_nullterm( pfc::string_base & out ) {
+		m_stream.read_string_nullterm( out, m_abort );
+	}
 	stream_reader & m_stream;
 	abort_callback & m_abort;
 };
@@ -434,6 +465,9 @@ public:
 		const t_size len = pfc::strlen_max(str, len_);
 		*this << pfc::downcast_guarded<t_uint32>(len);
 		write_raw(str, len);
+	}
+	void write_string_nullterm( const char * str ) {
+		this->write_raw( str, strlen(str)+1 );
 	}
 
 	stream_writer & m_stream;
@@ -565,7 +599,7 @@ FB2K_STREAM_READER_OVERLOAD(bool) {
 template<bool BE = false>
 class stream_writer_formatter_simple : public stream_writer_formatter<BE> {
 public:
-	stream_writer_formatter_simple() : stream_writer_formatter(_m_stream,_m_abort), m_buffer(_m_stream.m_buffer) {}
+	stream_writer_formatter_simple() : stream_writer_formatter<BE>(_m_stream,_m_abort), m_buffer(_m_stream.m_buffer) {}
 
 	typedef stream_writer_buffer_simple::t_buffer t_buffer;
 	t_buffer & m_buffer;
@@ -577,9 +611,9 @@ private:
 template<bool BE = false>
 class stream_reader_formatter_simple_ref : public stream_reader_formatter<BE> {
 public:
-	stream_reader_formatter_simple_ref(const void * source, t_size sourceSize) : stream_reader_formatter(_m_stream,_m_abort), _m_stream(source,sourceSize) {}
-	template<typename TSource> stream_reader_formatter_simple_ref(const TSource& source) : stream_reader_formatter(_m_stream,_m_abort), _m_stream(source) {}
-	stream_reader_formatter_simple_ref() : stream_reader_formatter(_m_stream,_m_abort) {}
+	stream_reader_formatter_simple_ref(const void * source, t_size sourceSize) : stream_reader_formatter<BE>(_m_stream,_m_abort), _m_stream(source,sourceSize) {}
+	template<typename TSource> stream_reader_formatter_simple_ref(const TSource& source) : stream_reader_formatter<BE>(_m_stream,_m_abort), _m_stream(source) {}
+	stream_reader_formatter_simple_ref() : stream_reader_formatter<BE>(_m_stream,_m_abort) {}
 
 	void set_data(const void * source, t_size sourceSize) {_m_stream.set_data(source,sourceSize);}
 	template<typename TSource> void set_data(const TSource & source) {_m_stream.set_data(source);}
@@ -790,3 +824,70 @@ private:
 	pfc::string8 m_contentType;
 	bool m_isRemote;
 };
+
+class file_chain : public file {
+public:
+	t_size read(void * p_buffer,t_size p_bytes,abort_callback & p_abort) {
+		return m_file->read(p_buffer, p_bytes, p_abort);
+	}
+	void read_object(void * p_buffer,t_size p_bytes,abort_callback & p_abort) {
+		m_file->read_object(p_buffer, p_bytes, p_abort);
+	}
+	t_filesize skip(t_filesize p_bytes,abort_callback & p_abort) {
+		return m_file->skip( p_bytes, p_abort );
+	}
+	void skip_object(t_filesize p_bytes,abort_callback & p_abort) {
+		m_file->skip_object(p_bytes, p_abort);
+	}
+	void write(const void * p_buffer,t_size p_bytes,abort_callback & p_abort) {
+		m_file->write( p_buffer, p_bytes, p_abort );
+	}
+
+	t_filesize get_size(abort_callback & p_abort) {
+		return m_file->get_size( p_abort );
+	}
+
+	t_filesize get_position(abort_callback & p_abort) {
+		return m_file->get_position( p_abort );
+	}
+
+	void resize(t_filesize p_size,abort_callback & p_abort) {
+		m_file->resize( p_size, p_abort );
+	}
+
+	void seek(t_filesize p_position,abort_callback & p_abort) {
+		m_file->seek( p_position, p_abort );
+	}
+
+	void seek_ex(t_sfilesize p_position,t_seek_mode p_mode,abort_callback & p_abort) {
+		m_file->seek_ex( p_position, p_mode, p_abort );
+	}
+
+	bool can_seek() {return m_file->can_seek();}	
+	bool get_content_type(pfc::string_base & p_out) {return m_file->get_content_type( p_out );}
+	bool is_in_memory() {return m_file->is_in_memory();}
+	void on_idle(abort_callback & p_abort) {m_file->on_idle(p_abort);}
+#if FOOBAR2000_TARGET_VERSION >= 2000
+	t_filestats get_stats(abort_callback & abort) { return m_file->get_stats(abort); }
+#else
+	t_filetimestamp get_timestamp(abort_callback & p_abort) {return m_file->get_timestamp( p_abort );}
+#endif
+	void reopen(abort_callback & p_abort) {m_file->reopen( p_abort );}
+	bool is_remote() {return m_file->is_remote();}
+
+	file_chain( file::ptr chain ) : m_file(chain) {}
+private:
+	file::ptr m_file;
+};
+
+class file_chain_readonly : public file_chain {
+public:
+	void write(const void * p_buffer,t_size p_bytes,abort_callback & p_abort) {throw exception_io_denied();}
+	void resize(t_filesize p_size,abort_callback & p_abort) {throw exception_io_denied();}
+	file_chain_readonly( file::ptr chain ) : file_chain(chain) {}
+	static file::ptr create( file::ptr chain ) { return new service_impl_t< file_chain_readonly > ( chain ); }
+};
+
+//! Debug self-test function for testing a file object implementation, performs various behavior validity checks, random access etc. Output goes to fb2k console.
+//! Returns true on success, false on failure (buggy file object implementation).
+bool fb2kFileSelfTest(file::ptr f, abort_callback & aborter);

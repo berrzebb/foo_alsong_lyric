@@ -37,7 +37,7 @@
 
 #include "share/alloc.h"
 #include "FLAC++/metadata.h"
-#include "FLAC++/assert.h"
+#include "FLAC/assert.h"
 #include <stdlib.h> // for malloc(), free()
 #include <string.h> // for memcpy() etc.
 

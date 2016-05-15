@@ -206,6 +206,7 @@ public:
 	inline void info_set_bitrate(t_int64 val) {info_set_int("bitrate",val);}
 
 	void info_set_wfx_chanMask(uint32_t val);
+	uint32_t info_get_wfx_chanMask() const;
 
 	bool is_encoding_lossy() const;
 
@@ -251,7 +252,16 @@ public:
 
 	void to_console() const;
 	void to_formatter(pfc::string_formatter&) const;
+	static bool field_is_person(const char * fieldName);
+	static bool field_is_title(const char * fieldName);
 
+	void to_stream( stream_writer * stream, abort_callback & abort ) const;
+	void from_stream( stream_reader * stream, abort_callback & abort );
+	void from_mem( const void * memPtr, size_t memSize);
+	
+	//! Returns ESTIMATED audio chunk spec from what has been put in the file_info. \n
+	//! Provided for convenience. Do not rely on it for processing decoded data.
+	audio_chunk::spec_t audio_chunk_spec() const; 
 protected:
 	file_info() {}
 	~file_info() {}

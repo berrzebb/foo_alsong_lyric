@@ -123,12 +123,14 @@ namespace pfc {
 
 		template<typename t_callback>
 		void enumerate(t_callback & p_callback) const {
-			m_data.enumerate(enumeration_wrapper<t_callback>(p_callback));
+            enumeration_wrapper<t_callback> cb(p_callback);
+			m_data.enumerate(cb);
 		}
 
 		template<typename t_callback>
 		void enumerate(t_callback & p_callback) {
-			m_data._enumerate_var(enumeration_wrapper_var<t_callback>(p_callback));
+            enumeration_wrapper_var<t_callback> cb(p_callback);
+			m_data._enumerate_var(cb);
 		}
 
 

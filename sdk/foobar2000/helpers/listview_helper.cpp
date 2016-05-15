@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#ifdef _WIN32
 
 
 namespace listview_helper {
@@ -186,3 +187,5 @@ int ListView_GetColumnCount(HWND listView) {
 	return Header_GetItemCount(header);
 }
 #endif
+
+#endif // _WIN32

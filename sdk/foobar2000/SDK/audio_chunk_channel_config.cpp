@@ -23,7 +23,6 @@
 #define SPEAKER_TOP_BACK_LEFT          0x8000
 #define SPEAKER_TOP_BACK_CENTER        0x10000
 #define SPEAKER_TOP_BACK_RIGHT         0x20000
-#endif
 
 static struct {DWORD m_wfx; unsigned m_native; } const g_translation_table[] =
 {
@@ -47,9 +46,14 @@ static struct {DWORD m_wfx; unsigned m_native; } const g_translation_table[] =
 	{SPEAKER_TOP_BACK_RIGHT,		audio_chunk::channel_top_back_right},
 };
 
+#endif
+#endif
 
-DWORD audio_chunk::g_channel_config_to_wfx(unsigned p_config)
+// foobar2000 channel flags are 1:1 identical to Windows WFX ones.
+uint32_t audio_chunk::g_channel_config_to_wfx(unsigned p_config)
 {
+    return p_config;
+#if 0
 	DWORD ret = 0;
 	unsigned n;
 	for(n=0;n<PFC_TABSIZE(g_translation_table);n++)
@@ -57,10 +61,13 @@ DWORD audio_chunk::g_channel_config_to_wfx(unsigned p_config)
 		if (p_config & g_translation_table[n].m_native) ret |= g_translation_table[n].m_wfx;
 	}
 	return ret;
+#endif
 }
 
-unsigned audio_chunk::g_channel_config_from_wfx(DWORD p_wfx)
+unsigned audio_chunk::g_channel_config_from_wfx(uint32_t p_wfx)
 {
+    return p_wfx;
+#if 0
 	unsigned ret = 0;
 	unsigned n;
 	for(n=0;n<PFC_TABSIZE(g_translation_table);n++)
@@ -68,9 +75,8 @@ unsigned audio_chunk::g_channel_config_from_wfx(DWORD p_wfx)
 		if (p_wfx & g_translation_table[n].m_wfx) ret |= g_translation_table[n].m_native;
 	}
 	return ret;
-}
-
 #endif
+}
 
 
 static const unsigned g_audio_channel_config_table[] = 

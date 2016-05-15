@@ -1,14 +1,18 @@
 #include "foobar2000.h"
 
-
 bool input_entry::g_find_service_by_path(service_ptr_t<input_entry> & p_out,const char * p_path)
+{
+    pfc::string_extension ext(p_path);
+    return g_find_service_by_path(p_out, p_path, ext );
+}
+
+bool input_entry::g_find_service_by_path(service_ptr_t<input_entry> & p_out,const char * p_path, const char * p_ext)
 {
 	service_ptr_t<input_entry> ptr;
 	service_enum_t<input_entry> e;
-	pfc::string_extension ext(p_path);
 	while(e.next(ptr))
 	{
-		if (ptr->is_our_path(p_path,ext))
+		if (ptr->is_our_path(p_path,p_ext))
 		{
 			p_out = ptr;
 			return true;
@@ -33,7 +37,7 @@ bool input_entry::g_find_service_by_content_type(service_ptr_t<input_entry> & p_
 }
 
 
-
+#if 0
 static void prepare_for_open(service_ptr_t<input_entry> & p_service,service_ptr_t<file> & p_file,const char * p_path,filesystem::t_open_mode p_open_mode,abort_callback & p_abort,bool p_from_redirect)
 {
 	if (p_file.is_empty())
@@ -64,6 +68,7 @@ static void prepare_for_open(service_ptr_t<input_entry> & p_service,service_ptr_
 
 	throw exception_io_unsupported_format();
 }
+#endif
 
 namespace {
 
@@ -110,7 +115,7 @@ namespace {
 				}
 			}
 			if (bad_data_count > 1) throw exception_io_data();
-			else if (bad_data_count == 0) throw exception_io_data(bad_data_message);
+			else if (bad_data_count == 0) pfc::throw_exception_with_message<exception_io_data>(bad_data_message);
 			else throw exception_io_unsupported_format();
 		}
 	}

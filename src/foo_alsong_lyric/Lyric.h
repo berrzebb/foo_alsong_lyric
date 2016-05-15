@@ -19,7 +19,7 @@
 
 #include <string>
 #include <vector>
-
+#include "LyricsInfo.h"
 struct LyricLine
 {
 	LyricLine(DWORD _time, const std::string &_lyric) : time(_time), lyric(_lyric) {}
@@ -36,12 +36,8 @@ struct LyricLine
 class Lyric
 {
 protected:
-	std::string m_Title;
-	std::string m_Album;
-	std::string m_Artist;
-	std::string m_Registrant;
-	std::string m_Lyric;
-	
+	LyricsInfo Info;
+
 	std::vector<LyricLine> m_LyricLines;
 	std::vector<LyricLine>::iterator m_LyricIterator;
 
@@ -56,29 +52,29 @@ public:
 	
 	std::vector<LyricLine>::const_iterator GetIteratorAt(unsigned int time) const; //returns lyric right after time.
 	
-	std::string GetRawLyric() const
+	const std::string& GetRawLyric() const
 	{
-		return m_Lyric;
+		return Info.sLyric;
 	}
 
-	std::string GetTitle() const
+	const std::string& GetTitle() const
 	{
-		return m_Title;
+		return Info.sTitle;
 	}
 
-	std::string GetAlbum() const
+	const std::string& GetAlbum() const
 	{
-		return m_Album;
+		return Info.sAlbum;
 	}
 
-	std::string GetArtist() const
+	const std::string& GetArtist() const
 	{
-		return m_Artist;
+		return Info.sArtist;
 	}
 
-	std::string GetRegistrant() const
+	const std::string& GetRegistrant() const
 	{
-		return m_Registrant;
+		return Info.sRegistrant;
 	}
 
 	int IsEndOfLyric(std::vector<LyricLine>::const_iterator it) const

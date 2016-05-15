@@ -12,9 +12,9 @@ namespace pfc {
 	public: typedef _t_item t_item;
 	private: typedef array_staticsize_t<t_item> t_self;
 	public:
-		array_staticsize_t() : m_size(0), m_array(NULL) {}
+		array_staticsize_t() : m_array(NULL), m_size(0) {}
 		array_staticsize_t(t_size p_size) : m_array(new t_item[p_size]), m_size(p_size) {}
-		~array_staticsize_t() {__release();}
+		~array_staticsize_t() {release_();}
 
 		//! Copy constructor nonfunctional when data type is not copyable.
 		array_staticsize_t(const t_self & p_source) : m_size(0), m_array(NULL) {
@@ -23,7 +23,7 @@ namespace pfc {
 
 		//! Copy operator nonfunctional when data type is not copyable.
 		const t_self & operator=(const t_self & p_source) {
-			__release();
+			release_();
 			
 			//m_array = pfc::malloc_copy_t(p_source.get_size(),p_source.get_ptr());
 			const t_size newsize = p_source.get_size();
@@ -34,7 +34,7 @@ namespace pfc {
 		}
 
 		void set_size_discard(t_size p_size) {
-			__release();
+			release_();
 			if (p_size > 0) {
 				m_array = new t_item[p_size];
 				m_size = p_size;
@@ -59,7 +59,7 @@ namespace pfc {
 
 		template<typename t_out> void enumerate(t_out & out) const { for(t_size walk = 0; walk < m_size; ++walk) out(m_array[walk]); }
 	private:
-		void __release() {
+		void release_() {
 			m_size = 0;
 			delete[] pfc::replace_null_t(m_array);
 		}
@@ -68,7 +68,7 @@ namespace pfc {
 	};
 
 	template<typename t_to,typename t_from>
-	inline void copy_array_t(t_to & p_to,const t_from & p_from) {
+	void copy_array_t(t_to & p_to,const t_from & p_from) {
 		const t_size size = array_size_t(p_from);
 		if (p_to.has_owned_items(p_from)) {//avoid landmines with actual array data overlapping, or p_from being same as p_to
 			array_staticsize_t<typename t_to::t_item> temp;
@@ -83,7 +83,7 @@ namespace pfc {
 	}
 
 	template<typename t_array,typename t_value>
-	inline void fill_array_t(t_array & p_array,const t_value & p_value) {
+	void fill_array_t(t_array & p_array,const t_value & p_value) {
 		const t_size size = array_size_t(p_array);
 		for(t_size n=0;n<size;n++) p_array[n] = p_value;
 	}

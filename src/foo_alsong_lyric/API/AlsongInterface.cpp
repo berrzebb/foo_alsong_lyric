@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "LyricSearchResultAlsong.h"
 #include "AlsongLyric.h"
+#include <string>
 #define ALSONG_VERSION "3.02"
 std::string Version(ALSONG_VERSION);
 void CAlsongInterface::GetLyric8( std::string Checksum,std::string MACAddress,std::string IPAddress,_ns1__GetLyric8Response& Response )
@@ -16,10 +17,10 @@ void CAlsongInterface::GetLyric8( std::string Checksum,std::string MACAddress,st
 	delete Request->stQuery;
 	delete Request;
 }
-std::string CAlsongInterface::UploadLyric(int nType, std::string Hash,std::string Filename,std::string Title,std::string Artist,std::string Album, std::string Local_Mac,std::string Local_IP,std::string RawLyric,std::string strRegisterName,int PlayTime,int nInfoID)
+std::string CAlsongInterface::UploadLyric(const int& nType, std::string Hash,std::string Filename,std::string Title,std::string Artist,std::string Album, std::string Local_Mac,std::string Local_IP,std::string RawLyric,std::string strRegisterName,const int& PlayTime,const int& nInfoID)
 {
 	_ns1__UploadLyric* Request = new _ns1__UploadLyric;
-	std::string dummy = "";
+	std::string dummy("");
 	Request->stQuery = new ns1__ST_USCOREUPLOAD_USCORELYRIC_USCOREQUERY;
 	Request->stQuery->nUploadLyricType = nType;
 	Request->stQuery->strMD5 = &Hash;
@@ -66,9 +67,9 @@ int CAlsongInterface::GetResembleLyric2Count( std::string artist,std::string Tit
 	API.Get()->GetResembleLyric2Count(Request,Response);
 	delete Request->stQuery;
 	delete Request;
-	return boost::lexical_cast<int>(Response.GetResembleLyric2CountResult->strResembleLyricCount->c_str());
+	return std::stoi(*Response.GetResembleLyric2CountResult->strResembleLyricCount);
 }
-LyricSearchResultAlsong* CAlsongInterface::GetResembleLyric2( std::string artist,std::string Title,int nPage )
+LyricSearchResultAlsong* CAlsongInterface::GetResembleLyric2( std::string artist,std::string Title,const int& nPage )
 {
 	boost::mutex AlsongMutex;
 	_ns1__GetResembleLyric2* Request = new _ns1__GetResembleLyric2;
@@ -82,26 +83,21 @@ LyricSearchResultAlsong* CAlsongInterface::GetResembleLyric2( std::string artist
 	delete Request;
 
 	std::vector<AlsongLyric> LyricList;
-	if(!Response.GetResembleLyric2Result){
+	if(Response.GetResembleLyric2Result){
+		auto Result = Response.GetResembleLyric2Result->ST_USCOREGET_USCORERESEMBLELYRIC2_USCORERETURN;
+		for(auto item : Result){
+			AlsongLyricInfo Info;
+			Info.nInfoID = item->strInfoID->data() ? -1 : stoi(item->strInfoID->data());
+			Info.sTitle = item->strTitle->data();
+			Info.sArtist = item->strArtistName->data();
+			Info.sAlbum = item->strAlbumName->data();
+			Info.sRegistrant = item->strRegisterName->data();
+			Info.sLyric = item->strLyric->data();
+			LyricList.emplace_back(Info);
+		}
+	}
+	if(LyricList.empty()){
 		LyricList.emplace_back(AlsongLyric());
-		return new LyricSearchResultAlsong(LyricList);
 	}
-	AlsongMutex.lock();
-	auto Result = Response.GetResembleLyric2Result->ST_USCOREGET_USCORERESEMBLELYRIC2_USCORERETURN;
-	if(Result.empty()){
-		AlsongMutex.unlock();
-		LyricList.emplace_back(AlsongLyric());
-		return new LyricSearchResultAlsong(LyricList);
-	}
-	while(Result.size()){
-		auto item = Result.back();
-		Result.pop_back();
-		AlsongLyric ret(*item);
-		LyricList.emplace_back(ret);
-	}
-	LyricSearchResultAlsong* res = new LyricSearchResultAlsong(LyricList);
-	AlsongMutex.unlock();
-
-	return res;
-
+	return new LyricSearchResultAlsong(LyricList);
 }

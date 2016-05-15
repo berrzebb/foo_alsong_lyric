@@ -175,12 +175,12 @@ public:
 	
 	bool process_field(titleformat_text_out * p_out,const char * p_name,t_size p_name_length,bool & p_found_flag) {
 		if (
-			stricmp_utf8_ex(p_name,p_name_length,"list_index",~0) == 0
+			pfc::stricmp_ascii_ex(p_name,p_name_length,"list_index",~0) == 0
 			) {
 			p_out->write_int_padded(titleformat_inputtypes::unknown,m_index+1, m_total);
 			p_found_flag = true; return true;
 		} else if (
-			stricmp_utf8_ex(p_name,p_name_length,"list_total",~0) == 0
+            pfc::stricmp_ascii_ex(p_name,p_name_length,"list_total",~0) == 0
 			) {
 			p_out->write_int(titleformat_inputtypes::unknown,m_total);
 			p_found_flag = true; return true;			

@@ -165,6 +165,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="AudioHash.cpp" />
     <ClCompile Include="LyricSearchResultAlsong.cpp" />
     <ClCompile Include="LyricSource.cpp" />
     <ClCompile Include="LyricSourceAlsong.cpp" />
@@ -197,9 +198,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AlsongLyric.h" />
+    <ClInclude Include="AudioHash.h" />
     <ClInclude Include="EncodingFunc.h" />
+    <ClInclude Include="IAudioHash.h" />
     <ClInclude Include="LyricSearchResult.h" />
     <ClInclude Include="LyricSearchResultAlsong.h" />
+    <ClInclude Include="LyricsInfo.h" />
     <ClInclude Include="LyricSource.h" />
     <ClInclude Include="LyricSourceAlsong.h" />
     <ClInclude Include="LRCLyric.h" />

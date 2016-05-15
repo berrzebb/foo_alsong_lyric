@@ -89,7 +89,7 @@ public:
 		m_postproc.close();
 		if ((p_flags & input_flag_no_postproc) == 0 && m_postproc.should_bother()) {
 			file_info_impl info;
-			get_info(p_subsong, info, p_abort);
+			this->get_info(p_subsong, info, p_abort);
 			m_postproc.initialize(info);
 		}
 		baseclass::decode_initialize(p_subsong, p_flags, p_abort);
@@ -101,7 +101,7 @@ public:
 		m_postproc.close();
 		if ((p_flags & input_flag_no_postproc) == 0 && m_postproc.should_bother()) {
 			file_info_impl info;
-			get_info(info, p_abort);
+			this->get_info(info, p_abort);
 			m_postproc.initialize(info);
 		}
 		baseclass::decode_initialize(p_flags, p_abort);

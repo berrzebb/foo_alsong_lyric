@@ -4,6 +4,15 @@
 PFC_DECLARE_EXCEPTION(exception_output_device_not_found, pfc::exception, "Audio device not found")
 PFC_DECLARE_EXCEPTION(exception_output_module_not_found, exception_output_device_not_found, "Output module not found")
 
+
+// =======================================================
+// IDEA BIN
+// ========
+// Accurate timing info required! get_latency NOT safe to call from any thread while it should be
+// There should be a legitimate way ( as in other than matching get_latency() against the amount of sent data ) to know when the output has finished prebuffering and started actual playback
+// Outputs should be able to handle idling : idle(abort_callback&) => while(!update()) aborter.sleep();  or optimized for specific output
+// =======================================================
+
 //! Structure describing PCM audio data format, with basic helper functions.
 struct t_pcmspec
 {
@@ -84,6 +93,7 @@ public:
 };
 
 class NOVTABLE output : public service_base {
+	FB2K_MAKE_SERVICE_INTERFACE(output,service_base);
 public:
 	//! Retrieves amount of audio data queued for playback, in seconds.
 	virtual double get_latency() = 0;
@@ -103,7 +113,6 @@ public:
 	//! @p_val Volume level in dB. Value of 0 indicates full ("100%") volume, negative values indciate different attenuation levels.
 	virtual void volume_set(double p_val) = 0;
 
-	FB2K_MAKE_SERVICE_INTERFACE(output,service_base);
 };
 
 class NOVTABLE output_v2 : public output {
@@ -116,6 +125,7 @@ public:
 };
 
 class NOVTABLE output_entry : public service_base {
+	FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(output_entry);
 public:
 	//! Instantiates output class.
 	virtual void instantiate(service_ptr_t<output> & p_out,const GUID & p_device,double p_buffer_length,bool p_dither,t_uint32 p_bitdepth) = 0;
@@ -140,7 +150,11 @@ public:
 
 	virtual t_uint32 get_config_flags() = 0;
 
-	FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(output_entry);
+	pfc::string8 get_device_name( const GUID & deviceID);
+	bool get_device_name( const GUID & deviceID, pfc::string_base & out );
+
+	static bool g_find( const GUID & outputID, output_entry::ptr & outObj );
+	static output_entry::ptr g_find(const GUID & outputID );
 };
 
 //! Helper; implements output_entry for specific output class implementation. output_entry methods are forwarded to static methods of your output class. Use output_factory_t<myoutputclass> instead of using this class directly.
@@ -158,10 +172,10 @@ public:
 	
 	t_uint32 get_config_flags() {
 		t_uint32 flags = 0;
-		if (T::g_advanced_settings_query()) flags |= flag_needs_advanced_config;
-		if (T::g_needs_bitdepth_config()) flags |= flag_needs_bitdepth_config;
-		if (T::g_needs_dither_config()) flags |= flag_needs_dither_config;
-		if (T::g_needs_device_list_prefixes()) flags |= flag_needs_device_list_prefixes ;
+		if (T::g_advanced_settings_query()) flags |= output_entry::flag_needs_advanced_config;
+		if (T::g_needs_bitdepth_config()) flags |= output_entry::flag_needs_bitdepth_config;
+		if (T::g_needs_dither_config()) flags |= output_entry::flag_needs_dither_config;
+		if (T::g_needs_device_list_prefixes()) flags |= output_entry::flag_needs_device_list_prefixes ;
 		return flags;
 	}
 };
@@ -173,7 +187,7 @@ class output_factory_t : public service_factory_single_t<output_entry_impl_t<T> 
 
 class output_impl : public output_v2 {
 protected:
-	output_impl::output_impl() : m_incoming_ptr(0) {}
+	output_impl() : m_incoming_ptr(0) {}
 	virtual void on_update() = 0;
 	//! Will never get more input than as returned by can_write_samples().
 	virtual void write(const audio_chunk & p_data) = 0;
@@ -189,56 +203,11 @@ protected:
 protected:
 	void on_need_reopen() {m_active_spec = t_samplespec();}
 private:
-	void flush() {
-		m_incoming_ptr = 0;
-		m_incoming.set_size(0);
-		on_flush();
-	}
-	void flush_changing_track() {
-		m_incoming_ptr = 0;
-		m_incoming.set_size(0);
-		on_flush_changing_track();
-	}
-	void update(bool & p_ready) {
-		on_update();
-		if (m_incoming_spec != m_active_spec && m_incoming_ptr < m_incoming.get_size()) {
-			if (get_latency_samples() == 0) {
-				open(m_incoming_spec);
-				m_active_spec = m_incoming_spec;
-			} else {
-				force_play();
-			}
-		} 
-		if (m_incoming_spec == m_active_spec && m_incoming_ptr < m_incoming.get_size()) {
-			t_size cw = can_write_samples() * m_incoming_spec.m_channels;
-			t_size delta = pfc::min_t(m_incoming.get_size() - m_incoming_ptr,cw);
-			if (delta > 0) {
-				write(audio_chunk_temp_impl(m_incoming.get_ptr()+m_incoming_ptr,delta / m_incoming_spec.m_channels,m_incoming_spec.m_sample_rate,m_incoming_spec.m_channels,m_incoming_spec.m_channel_config));
-				m_incoming_ptr += delta;
-			}
-		}
-		p_ready = (m_incoming_ptr == m_incoming.get_size());
-	}
-	double get_latency() {
-		double ret = 0;
-		if (m_incoming_spec.is_valid()) {
-			ret += audio_math::samples_to_time( (m_incoming.get_size() - m_incoming_ptr) / m_incoming_spec.m_channels, m_incoming_spec.m_sample_rate );
-		}
-		if (m_active_spec.is_valid()) {
-			ret += audio_math::samples_to_time( get_latency_samples() , m_active_spec.m_sample_rate );
-		}
-		return ret;	
-	}
-	void process_samples(const audio_chunk & p_chunk) {
-		pfc::dynamic_assert(m_incoming_ptr == m_incoming.get_size());
-		t_samplespec spec;
-		spec.fromchunk(p_chunk);
-		if (!spec.is_valid()) throw exception_io_data("Invalid audio stream specifications");
-		m_incoming_spec = spec;
-		t_size length = p_chunk.get_data_length();
-		m_incoming.set_data_fromptr(p_chunk.get_data(),length);
-		m_incoming_ptr = 0;
-	}
+	void flush();
+	void flush_changing_track();
+	void update(bool & p_ready);
+	double get_latency();
+	void process_samples(const audio_chunk & p_chunk);
 
 	pfc::array_t<audio_sample,pfc::alloc_fast_aggressive> m_incoming;
 	t_size m_incoming_ptr;
@@ -284,5 +253,37 @@ public:
 	virtual bool hasVisualisation() = 0;
 };
 
+#pragma pack(push, 1)
+//! \since 1.3.5
+struct outputCoreConfig_t {
+
+	static outputCoreConfig_t defaults();
+
+	GUID m_output;
+	GUID m_device;
+	double m_buffer_length;
+	uint32_t m_flags;
+	uint32_t m_bitDepth;
+	enum { flagUseDither = 1 << 0 };
+};
+#pragma pack(pop)
+
+//! \since 1.3.5
+//! Allows components to access foobar2000 core's output settings.
+class NOVTABLE output_manager : public service_base {
+	FB2K_MAKE_SERVICE_INTERFACE_ENTRYPOINT(output_manager);
+public:
+	//! Instantiates an output instance with core settings.
+	//! @param overrideBufferLength Specify non zero to override user-configured buffer length in core settings.
+	//! @returns The new output instance. Throws exceptions on failure (invalid settings or other).
+	virtual output::ptr instantiateCoreDefault(double overrideBufferLength = 0) = 0;
+	virtual void getCoreConfig( void * out, size_t outSize ) = 0;
+
+	void getCoreConfig(outputCoreConfig_t & out ) { getCoreConfig(&out, sizeof(out) ); }
+};
+
+
+extern const GUID output_id_null;
+extern const GUID output_id_default;
 
 #endif //_FOOBAR2000_SDK_OUTPUT_H_

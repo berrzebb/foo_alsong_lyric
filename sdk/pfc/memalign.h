@@ -1,3 +1,7 @@
+#ifndef _MSC_VER
+#include <stdlib.h>
+#endif
+
 namespace pfc {
 	template<unsigned alignBytes = 16>
 	class mem_block_aligned {
@@ -16,20 +20,34 @@ namespace pfc {
 			if (s == m_size) {
 				// nothing to do
 			} else if (s == 0) {
-				_aligned_free(m_ptr);
+				_free(m_ptr);
 				m_ptr = NULL;
 			} else {
 				void * ptr;
+#ifdef _MSC_VER
 				if (m_ptr == NULL) ptr = _aligned_malloc(s, alignBytes);
 				else ptr = _aligned_realloc(m_ptr, s, alignBytes);
 				if ( ptr == NULL ) throw std::bad_alloc();
+#else
+#ifdef __ANDROID__
+                if ((ptr = memalign( alignBytes, s )) == NULL) throw std::bad_alloc();
+#else
+                if (posix_memalign( &ptr, alignBytes, s ) < 0) throw std::bad_alloc();
+#endif
+                if (m_ptr != NULL) {
+                    memcpy( ptr, m_ptr, min_t<size_t>( m_size, s ) );
+                    _free( m_ptr );
+                }
+#endif
 				m_ptr = ptr;
 			}
 			m_size = s;
 		}
 		void set_size(size_t s) {resize(s);}
 		
-		~mem_block_aligned() {_aligned_free(m_ptr);}
+		~mem_block_aligned() {
+            _free(m_ptr);
+        }
 
 		self_t const & operator=(self_t const & other) {
 			assign(other);
@@ -48,13 +66,22 @@ namespace pfc {
 			other.m_ptr = NULL; other.m_size = 0;
 		}
 		self_t const & operator=(self_t && other) {
-			_aligned_free(m_ptr);
+			_free(m_ptr);
 			m_ptr = other.m_ptr;
 			m_size = other.m_size;
 			other.m_ptr = NULL; other.m_size = 0;
 			return *this;
 		}
+        
 	private:
+        static void _free(void * ptr) {
+#ifdef _MSC_VER
+            _aligned_free(ptr);
+#else
+            free(ptr);
+#endif
+        }
+        
 		void * m_ptr;
 		size_t m_size;
 	};
@@ -63,7 +90,7 @@ namespace pfc {
 	class mem_block_aligned_t {
 	public:
 		typedef mem_block_aligned_t<obj_t, alignBytes> self_t;
-		void resize(size_t s) { m.resize( pfc::multiply_guarded(s, sizeof(obj_t) ) ); }
+		void resize(size_t s) { m.resize( multiply_guarded(s, sizeof(obj_t) ) ); }
 		void set_size(size_t s) {resize(s);}
 		size_t size() const { return m.size() / sizeof(obj_t); }
 		size_t get_size() const {return size();}

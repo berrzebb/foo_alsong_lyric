@@ -24,8 +24,9 @@ double dsp_manager::run(dsp_chunk_list * p_list,const metadb_handle_ptr & p_cur_
 	TRACK_CALL_TEXT("dsp_manager::run");
 
 	try {
+#if defined(_MSC_VER) && defined(_M_IX86)
 		fpu_control_default l_fpu_control;
-
+#endif
 		double latency=0;
 		bool done = false;
 

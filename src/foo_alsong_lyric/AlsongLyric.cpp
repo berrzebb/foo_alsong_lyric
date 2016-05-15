@@ -19,66 +19,22 @@
 
 #include "AlsongLyric.h"
 #include "./API/AlsongAPI.h"
-AlsongLyric::AlsongLyric(const _ns1__GetLyric8Response& Response)
-{
-	auto item = Response.GetLyric8Result;
-	if(!item)
-		return;
-	if(!item->strInfoID->c_str()){
-		m_Title = item->strTitle->c_str();
-		m_Artist = item->strArtist->c_str();
-		m_Album = item->strAlbum->c_str();
-		m_Registrant = item->strRegisterFirstName->c_str();
-		m_Lyric = item->strLyric->c_str();
 
-		if(!m_Album.compare(m_Title))
-			m_Album.clear();
-		m_nInfoID = -1;
-	}
-	else{
-		m_Title = item->strTitle->c_str();
-		m_Artist = item->strArtist->c_str();
-		m_Album = item->strAlbum->c_str();
-		m_Registrant = item->strRegisterFirstName->c_str();
-		m_Lyric = item->strLyric->c_str();
-		m_nInfoID = boost::lexical_cast<int>(item->strInfoID->c_str());
-	}
+AlsongLyric::AlsongLyric(const AlsongLyricInfo& Response)
+{
+	m_nInfoID = Response.nInfoID;
+	Info = Response;
+	if(!m_nInfoID && Info.sAlbum != Info.sTitle)
+		Info.sAlbum.clear();
 	Split("<br>");
 }
-
-AlsongLyric::AlsongLyric(const ns1__ST_USCOREGET_USCORERESEMBLELYRIC2_USCORERETURN& Response)
+AlsongLyric::AlsongLyric(const AlsongLyric& other) : m_nInfoID(other.m_nInfoID)
 {
-	if(!Response.strInfoID->c_str()){
-		m_Title = Response.strTitle->c_str();
-		m_Artist = Response.strArtistName->c_str();
-		m_Album = Response.strAlbumName->c_str();
-		m_Registrant = Response.strRegisterFirstName->c_str();
-		m_Lyric = Response.strLyric->c_str();
-
-		if(!m_Album.compare(m_Title))
-			m_Album.clear();
-		m_nInfoID = -1;
-	}
-	else{
-		m_Title = Response.strTitle->c_str();
-		m_Artist = Response.strArtistName->c_str();
-		m_Album = Response.strAlbumName->c_str();
-		m_Registrant = Response.strRegisterFirstName->c_str();
-		m_Lyric = Response.strLyric->c_str();
-		m_nInfoID = boost::lexical_cast<int>(Response.strInfoID->c_str());
-	}
-	Split("<br>");
-}
-
-AlsongLyric::AlsongLyric(const AlsongLyric& other) : Lyric(other),m_nInfoID(other.m_nInfoID)
-{
-	if(!m_Album.compare(m_Title))
-		m_Album.clear();
-	Split("<br>");	
+	AlsongLyric((const Lyric&)other);
 }
 AlsongLyric::AlsongLyric(const Lyric& other) : Lyric(other)
 {
-	if(!m_Album.compare(m_Title))
-		m_Album.clear();
+	if(Info.sAlbum != Info.sTitle)
+		Info.sAlbum.clear();
 	Split("<br>");
 }

@@ -124,7 +124,11 @@ public:
 
 	//! Starts playback if playback is inactive, otherwise toggles pause.
 	void play_or_pause() {if (is_playing()) toggle_pause(); else start();}
+    void play_or_unpause() { if (is_playing()) pause(false); else start();}
 
+    void previous() { start(track_command_prev); }
+    void next() { start(track_command_next); }
+    
 	//deprecated
 	inline void play_start(t_track_command p_command = track_command_play,bool p_paused = false) {start(p_command,p_paused);}
 	//deprecated

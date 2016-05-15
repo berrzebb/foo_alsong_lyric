@@ -16,6 +16,9 @@
     <Filter Include="API">
       <UniqueIdentifier>{8c5d639e-f0ec-41d5-bcef-c3cb3df7db60}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Interface">
+      <UniqueIdentifier>{8ea8a1a3-4730-423e-aca9-39f1e85a1a2b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConfigStore.cpp">
@@ -96,6 +99,9 @@
     <ClCompile Include="API\AlsongInterface.cpp">
       <Filter>API</Filter>
     </ClCompile>
+    <ClCompile Include="AudioHash.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ConfigStore.h">
@@ -165,6 +171,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LyricSync.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LyricsInfo.h">
+      <Filter>Header Files\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="IAudioHash.h">
+      <Filter>Header Files\Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioHash.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

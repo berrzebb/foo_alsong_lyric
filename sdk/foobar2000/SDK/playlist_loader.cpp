@@ -118,7 +118,7 @@ static void index_tracks_helper(const char * p_path,const service_ptr_t<file> & 
 				file_info_impl info;
 				try {
 					TRACK_CODE("get_info",instance->get_info(index,info,p_abort));
-				} catch(std::exception const & e) {
+				} catch(...) {
 					bInfoGetError = true;
 				}
 				p_callback->on_entry_info(handle,p_type,stats,info,true);

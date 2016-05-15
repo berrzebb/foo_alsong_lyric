@@ -29,3 +29,8 @@ void packet_decoder::setEventLogger(event_logger::ptr logger) {
 void packet_decoder::setCheckingIntegrity(bool checkingIntegrity) {
 	this->set_stream_property(property_checkingintegrity, checkingIntegrity ? 1 : 0, NULL, 0);
 }
+
+void packet_decoder::setAllowDelayed( bool bAllow ) {
+    this->set_stream_property( property_allow_delayed_output, bAllow ? 1 : 0, NULL, 0);
+}
+

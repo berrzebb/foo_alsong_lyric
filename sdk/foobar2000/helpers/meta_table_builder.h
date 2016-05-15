@@ -4,7 +4,7 @@ public:
 	template<typename t_values>
 	void operator() (const char * p_name,const t_values & p_values) {
 		t_size index = ~0;
-		for(t_values::const_iterator iter = p_values.first(); iter.is_valid(); ++iter) {
+		for(typename t_values::const_iterator iter = p_values.first(); iter.is_valid(); ++iter) {
 			if (index == ~0) index = m_info.__meta_add_unsafe(p_name,*iter);
 			else m_info.meta_add_value(index,*iter);
 		}
@@ -21,7 +21,7 @@ public:
 		if (p_values.get_count() > 0) {
 			if (!m_info.info_set_replaygain(p_name, *p_values.first())) {
 				t_size index = ~0;
-				for(t_values::const_iterator iter = p_values.first(); iter.is_valid(); ++iter) {
+				for(typename t_values::const_iterator iter = p_values.first(); iter.is_valid(); ++iter) {
 					if (index == ~0) index = m_info.__meta_add_unsafe(p_name,*iter);
 					else m_info.meta_add_value(index,*iter);
 				}
@@ -85,11 +85,13 @@ public:
 	}
 	void finalize(file_info & p_info) const {
 		p_info.meta_remove_all();
-		m_data.enumerate(_meta_table_enum_wrapper(p_info));
+        _meta_table_enum_wrapper e(p_info);
+		m_data.enumerate(e);
 	}
 	void finalize_withRG(file_info & p_info) const {
 		p_info.meta_remove_all(); p_info.set_replaygain(replaygain_info_invalid);
-		m_data.enumerate(_meta_table_enum_wrapper_RG(p_info));
+        _meta_table_enum_wrapper_RG e(p_info);
+		m_data.enumerate(e);
 	}
 
 	void from_info(const file_info & p_info) {

@@ -22,185 +22,39 @@
 #include "md5.h"
 #include "AlsongLyric.h"
 #include "FLAC++/all.h"
+#include "LyricsInfo.h"
+#include "AudioHash.h"
 
 DWORD LyricSourceAlsong::GetFileHash(const metadb_handle_ptr &track, CHAR *Hash)
 {	
-	int i;
-	DWORD Start = 0; //Start Address
-	BYTE MD5[16];
-	BYTE temp[255]; 
-
 	service_ptr_t<file> sourcefile;
 	abort_callback_impl abort_callback;
-	pfc::string8 str = track->get_path();
-
 	try
 	{
-		archive_impl::g_open(sourcefile, str, foobar2000_io::filesystem::open_mode_read, abort_callback);
-	}
-	catch(...)
-	{
+		archive_impl::g_open(sourcefile, track->get_path(), foobar2000_io::filesystem::open_mode_read, abort_callback);
+		IAudioHash* audiohash;
+		BYTE hashbuf[4];
+		sourcefile->seek(0,abort_callback);
+		sourcefile->read(hashbuf,4,abort_callback);
+		if(!memcmp(hashbuf,"ID3",3)){
+			audiohash = new Mpeg(sourcefile);
+		}else if(!memcmp(hashbuf,"fLaC",4)){
+			audiohash = new Flac(sourcefile);
+		}else if(!memcmp(hashbuf,"OggS",4)){
+			audiohash = new Ogg(sourcefile);
+		}else{
+			audiohash = new Cue(track);
+		}
+		memcpy_s(Hash,audiohash->Hash.size(),audiohash->Hash.data(),audiohash->Hash.size());
+	}catch(...){
 		return false;
 	}
-	//TODO:cue일때 특별 처리(subsong_index가 있을 때)
-	char *fmt = (char *)str.get_ptr() + str.find_last('.') + 1;
-
-	try 
-	{
-
-		if(!StrCmpIA(fmt, "cue"))
-		{
-			file_info_impl info;
-			if(!track->get_info_async(info)){
-				return false;
-			}
-			const char *realfile = info.info_get("referenced_file");
-			const char *ttmp = info.info_get("referenced_offset");
-			int m, s, ms;
-			if(ttmp == NULL)
-				m = s = ms = 0;
-			else
-			{
-				std::stringstream stream(ttmp);
-				char unused;
-				stream >> m >> unused >> s >> unused >> ms;
-				const char *pregap = info.info_get("pregap");
-				if(pregap)
-				{
-					std::stringstream stream(pregap);
-					int pm, ps, pms;
-					stream >> pm >> unused >> ps >> unused >> pms;
-					m += pm;
-					s += ps;
-					ms += pms;
-				}
-			}
-
-			audio_chunk_impl chunk;
-			pfc::string realfilename = pfc::io::path::getDirectory(str) + "\\" + realfile;
-
-			input_helper helper;
-
-			// open input
-			helper.open(service_ptr_t<file>(), make_playable_location(realfilename.get_ptr(), 0), input_flag_simpledecode, abort_callback);
-
-			helper.get_info(0, info, abort_callback);
-			helper.seek(m * 60 + s + ms * 0.01, abort_callback);
-
-			if (!helper.run(chunk, abort_callback)) return false;		
-
-			t_uint64 length_samples = audio_math::time_to_samples(info.get_length(), chunk.get_sample_rate());
-			//chunk.get_channels();
-			std::vector<double> buf;
-			buf.resize(0x200000);
-			while (true)
-			{
-				// Store the data somewhere.
-				audio_sample *sample = chunk.get_data();
-				int len = chunk.get_data_length();
-				buf.insert(buf.end(), sample, sample + len);
-				if(buf.size() > 0x200000)
-					break;
-
-				bool decode_done = !helper.run(chunk, abort_callback);
-				if (decode_done) break;
-			}
-
-			md5((unsigned char *)&buf[0], min(buf.size(), 0x200000), MD5);
-		}
-		else
-		{
-			if(!StrCmpIA(fmt, "mp3"))
-			{
-				while(1) //ID3가 여러개 있을수도 있음
-				{ //ID3는 보통 맨 처음에 있음
-					sourcefile->seek(Start, abort_callback);
-					sourcefile->read(temp, 3, abort_callback);
-					if(temp[0] == 'I' && temp[1] == 'D' && temp[2] == '3')
-					{
-						sourcefile->read(temp, 7, abort_callback);
-#define ID3_TAGSIZE(x) ((*(x) << 21) | (*((x) + 1) << 14) | (*((x) + 2) << 7) | *((x) + 3))
-						Start += ID3_TAGSIZE(temp + 3) + 10;
-#undef ID3_TAGSIZE
-					}
-					else
-						break;
-				}
-				sourcefile->seek(Start, abort_callback);
-				for(;;Start ++)
-				{
-					BYTE temp;
-					sourcefile->read_lendian_t(temp, abort_callback);
-					if(temp == 0xFF) //MP3 Header까지
-						break;
-				}
-			}
-			else if(!StrCmpIA(fmt, "ogg"))
-			{
-				//처음 나오는 vorbis setup header 검색
-				i = 0;
-				CHAR SetupHeader[7] = {0x05, 0x76, 0x6F, 0x72, 0x62, 0x69, 0x73}; //Vorbis Setup Header
-				CHAR BCV[3] = {'B', 'C', 'V'}; //codebook start?
-				while(1)
-				{
-					sourcefile->seek(i, abort_callback);
-					sourcefile->read(temp, 7, abort_callback);
-					if(!memcmp(temp, SetupHeader, 7))
-					{
-						sourcefile->seek(i + 7 + 1, abort_callback);
-						sourcefile->read(temp, 3, abort_callback);
-						if(!memcmp(temp, BCV, 3)) //Setup Header와 BCV 사이에 뭔가 바이트가 하나 더 있다.
-						{
-							//여기부터다
-							Start = i + 7 + 1 + 3;
-							break;
-						}
-					}
-					i ++;
-					if(i > sourcefile->get_size(abort_callback))
-						return false; //에러
-				}
-
-			}
-			else
-				Start = 0;
-
-			BYTE *buf = (BYTE *)malloc(0x28000);
-
-			try
-			{
-				sourcefile->seek(Start, abort_callback);
-				sourcefile->read(buf, min(0x28000, (size_t)sourcefile->get_size(abort_callback) - Start), abort_callback);
-			}
-			catch(...)
-			{
-				free(buf);
-				return false;
-			}
-
-			md5(buf, min(0x28000, (size_t)sourcefile->get_size(abort_callback) - Start), MD5); //FileSize < 0x28000 일수도
-			free(buf);
-		}
-	}
-	catch(...)
-	{
-		return false;
-	}
-
-	CHAR HexArray[] = "0123456789abcdef";
-
-	for(i = 0; i < 32; i += 2)
-	{
-		Hash[i] = HexArray[(MD5[i / 2] & 0xf0) >> 4];
-		Hash[i + 1] = HexArray[MD5[i / 2] & 0x0f];
-	}
-	Hash[i] = 0;
-
 	return true;
 }
 
 boost::shared_ptr<Lyric> LyricSourceAlsong::Get(const metadb_handle_ptr &track)
 {
+	boost::shared_ptr<Lyric> result(new AlsongLyric());
 	struct hostent *host;
 	CHAR Hostname[80];
 	CHAR *Local_IP;
@@ -211,7 +65,7 @@ boost::shared_ptr<Lyric> LyricSourceAlsong::Get(const metadb_handle_ptr &track)
 
 	struct in_addr addr;
 	if(host == NULL)
-		return boost::shared_ptr<Lyric>(new AlsongLyric());
+		return result;
 	memcpy(&addr, host->h_addr_list[0], sizeof(struct in_addr));
 	Local_IP = inet_ntoa(*((in_addr *)host->h_addr_list[0]));
 
@@ -228,7 +82,7 @@ boost::shared_ptr<Lyric> LyricSourceAlsong::Get(const metadb_handle_ptr &track)
 		pAdapterInfo = pAdapterInfo->Next;
 	}
 	if(pAdapterInfo == NULL)
-		return boost::shared_ptr<Lyric>(new AlsongLyric());
+		return result;
 
 	CHAR HexArray[] = "0123456789ABCDEF";
 	int i;
@@ -246,13 +100,19 @@ boost::shared_ptr<Lyric> LyricSourceAlsong::Get(const metadb_handle_ptr &track)
 	_ns1__GetLyric8Response Response;
 	Interface.GetLyric8(Hash,Local_Mac,Local_IP,Response);
 	if(boost::this_thread::interruption_requested())
-		return boost::shared_ptr<Lyric>(new AlsongLyric());
-
+		return result;
 	try
 	{
 		if(Response.GetLyric8Result == NULL) return boost::shared_ptr<Lyric>();
-		if(boost::lexical_cast<int>(Response.GetLyric8Result->strInfoID->c_str()) != -1){
-			return boost::shared_ptr<Lyric>(new AlsongLyric(Response));
+		AlsongLyricInfo Info;
+		Info.nInfoID = stoi(Response.GetLyric8Result->strInfoID->data()); 
+		if(Info.nInfoID != -1){
+			Info.sTitle = Response.GetLyric8Result->strTitle->data();
+			Info.sArtist = Response.GetLyric8Result->strArtist->data();
+			Info.sAlbum = Response.GetLyric8Result->strAlbum->data();
+			Info.sRegistrant = Response.GetLyric8Result->strRegisterName->data();
+			Info.sLyric = Response.GetLyric8Result->strLyric->data();
+			result.reset(new AlsongLyric(Info));
 		}else{
 			service_ptr_t<titleformat_object> to;
 			pfc::string8 title;
@@ -262,19 +122,17 @@ boost::shared_ptr<Lyric> LyricSourceAlsong::Get(const metadb_handle_ptr &track)
 			track->format_title(NULL, title, to, NULL);
 			static_api_ptr_t<titleformat_compiler>()->compile_safe(to, "%artist%");
 			track->format_title(NULL, artist, to, NULL);
-			boost::shared_ptr<LyricSearchResultAlsong> Result(Interface.GetResembleLyric2(artist.get_ptr(),title.get_ptr()));
+			boost::shared_ptr<LyricSearchResult> Result(SearchLyric(artist.get_ptr(),title.get_ptr(),0));
 			AlsongLyric lyric(static_cast<AlsongLyric>(*Result->Get()));
-			if(!lyric.HasLyric()){
-				return boost::shared_ptr<Lyric>();
-			}else{
-				return boost::shared_ptr<Lyric>(new AlsongLyric(lyric));
-			}
+			if(Result->Get()->HasLyric())
+				result.reset(Result->Get());
 		}
 	}
 	catch(...)
 	{
-		return boost::shared_ptr<Lyric>();
+		return result;
 	}
+	return result;
 }
 
 DWORD LyricSourceAlsong::Save(const metadb_handle_ptr &track, const std::string &Artist, const std::string &Title, const std::string &RawLyric, const std::string &Album, const std::string &Registrant, int nInfoID)

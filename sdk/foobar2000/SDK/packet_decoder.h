@@ -48,9 +48,9 @@ public:
 	struct matroska_setup
 	{
 		const char * codec_id;
-		unsigned sample_rate,sample_rate_output;
-		unsigned channels;
-		unsigned codec_private_size;
+		uint32_t sample_rate,sample_rate_output;
+		uint32_t channels;
+		size_t codec_private_size;
 		const void * codec_private;
 	};
 	//owner_MP4: param1 - codec ID (MP4 audio type), param2 - MP4 codec initialization data
@@ -59,7 +59,7 @@ public:
 
 
 	//these are used to initialize PCM decoder
-	static const GUID property_samplerate,property_bitspersample,property_channels,property_byteorder,property_signed,property_channelmask, property_bufferpadding, property_eventlogger, property_checkingintegrity;
+	static const GUID property_samplerate,property_bitspersample,property_channels,property_byteorder,property_signed,property_channelmask, property_bufferpadding, property_eventlogger, property_checkingintegrity, property_samples_per_frame;
 	//property_samplerate : param1 == sample rate in hz
 	//property_bitspersample : param1 == bits per sample
 	//property_channels : param1 == channel count
@@ -68,6 +68,7 @@ public:
 	//propery_bufferpadding : param1 == padding of each passed buffer in bytes; retval: decoder's preferred padding
 	//property_eventlogger : param2 = event logger ptr, NULL to disable, param2size 0 always
 	//property_checkingintegrity : param1 = checking integrity bool flag
+    //property_samples_per_frame : param1 = samples per frame
 	
 
 
@@ -77,9 +78,16 @@ public:
 	//property_ogg_qury_preskip : returns preskip samples (Opus)
 	static const GUID property_ogg_header, property_ogg_query_sample_rate, property_ogg_packet, property_ogg_query_preskip;
 
+    //property_mp4_esds : p_param2 = MP4 ESDS chunk content as needed by some decoders
+    static const GUID property_mp4_esds;
+
+    //property_allow_delayed_output : p_param1 = bool flag indicating whether the decoder than delay outputting audio data at will; essential for Apple AQ decoder
+    static const GUID property_allow_delayed_output;
+    
 	size_t initPadding();
 	void setEventLogger(event_logger::ptr logger);
 	void setCheckingIntegrity(bool checkingIntegrity);
+    void setAllowDelayed( bool bAllow = true );
 
 	FB2K_MAKE_SERVICE_INTERFACE(packet_decoder,service_base);
 };

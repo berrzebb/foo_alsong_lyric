@@ -1,8 +1,12 @@
+#include <functional>
+
 //! Callback object class for main_thread_callback_manager service.
 class NOVTABLE main_thread_callback : public service_base {
 public:
 	//! Gets called from main app thread. See main_thread_callback_manager description for more info.
 	virtual void callback_run() = 0;
+    
+    void callback_enqueue(); // helper
 
 	FB2K_MAKE_SERVICE_INTERFACE(main_thread_callback,service_base);
 };
@@ -20,9 +24,8 @@ public:
 };
 
 
-static void main_thread_callback_add(main_thread_callback::ptr ptr) {
-	static_api_ptr_t<main_thread_callback_manager>()->add_callback(ptr);
-}
+void main_thread_callback_add(main_thread_callback::ptr ptr);
+
 template<typename t_class> static void main_thread_callback_spawn() {
 	main_thread_callback_add(new service_impl_t<t_class>);
 }
@@ -40,6 +43,10 @@ public:
 	static void callThis(host_t * host, param_t & param) {
 		host->inMainThread(param);
 	}
+    template<typename host_t>
+    static void callThis( host_t * host ) {
+        host->inMainThread();
+    }
 };
 
 // Internal class, do not use.
@@ -63,4 +70,95 @@ static void callInMainThreadSvc(myservice_t * host, param_t const & param) {
 	typedef _callInMainThreadSvc_t<myservice_t, param_t> impl_t;
 	service_ptr_t<impl_t> obj = new service_impl_t<impl_t>(host, param);
 	static_api_ptr_t<main_thread_callback_manager>()->add_callback( obj );
+}
+
+
+
+
+//! Helper class to call methods of your class (host class) in main thread with convenience. \n
+//! Deals with the otherwise ugly scenario of your class becoming invalid while a method is queued. \n
+//! Have this as a member of your class, then use m_mthelper.add( this, somearg ) ; to defer a call to this->inMainThread(somearg). \n
+//! If your class becomes invalid before inMainThread is executed, the pending callback is discarded. \n
+//! You can optionally call shutdown() to invalidate all pending callbacks early (in a destructor of your class - without waiting for callInMainThreadHelper destructor to do the job. \n
+//! In order to let callInMainThreadHelper access your private methods, declare friend class callInMainThread.
+class callInMainThreadHelper {
+public:
+    
+    typedef std::function< void () > func_t;
+    
+    typedef pfc::rcptr_t< bool > killswitch_t;
+    
+    class entryFunc : public main_thread_callback {
+    public:
+        entryFunc( func_t const & func, killswitch_t ks ) : m_ks(ks), m_func(func) {}
+        
+        void callback_run() {
+            if (!*m_ks) m_func();
+        }
+        
+    private:
+        killswitch_t m_ks;
+        func_t m_func;
+    };
+    
+    template<typename host_t, typename arg_t>
+    class entry : public main_thread_callback {
+    public:
+        entry( host_t * host, arg_t const & arg, killswitch_t ks ) : m_ks(ks), m_host(host), m_arg(arg) {}
+        void callback_run() {
+            if (!*m_ks) callInMainThread::callThis( m_host, m_arg );
+        }
+    private:
+        killswitch_t m_ks;
+        host_t * m_host;
+        arg_t m_arg;
+    };
+    template<typename host_t>
+    class entryVoid : public main_thread_callback {
+    public:
+        entryVoid( host_t * host, killswitch_t ks ) : m_ks(ks), m_host(host) {}
+        void callback_run() {
+            if (!*m_ks) callInMainThread::callThis( m_host );
+        }
+    private:
+        killswitch_t m_ks;
+        host_t * m_host;
+    };
+    
+    void add(func_t f) {
+        add_( new service_impl_t< entryFunc > ( f, m_ks ) );
+    }
+    
+    template<typename host_t, typename arg_t>
+    void add( host_t * host, arg_t const & arg) {
+        add_( new service_impl_t< entry<host_t, arg_t> >( host, arg, m_ks ) );
+    }
+    template<typename host_t>
+    void add( host_t * host ) {
+        add_( new service_impl_t< entryVoid<host_t> >( host, m_ks ) );
+    }
+    void add_( main_thread_callback::ptr cb ) {
+        main_thread_callback_add( cb );
+    }
+    
+    callInMainThreadHelper() {
+        m_ks.new_t();
+        * m_ks = false;
+    }
+    void shutdown() {
+        PFC_ASSERT( core_api::is_main_thread() );
+        * m_ks = true;
+    }
+    ~callInMainThreadHelper() {
+        shutdown();
+    }
+    
+private:
+    killswitch_t m_ks;
+    
+};
+
+// Modern helper
+namespace fb2k {
+    void inMainThread( std::function<void () > f );
 }

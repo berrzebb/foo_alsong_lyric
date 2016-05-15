@@ -115,4 +115,19 @@ private:
 	bool m_dynamic_info_trigger,m_dynamic_info_track_trigger;
 };
 
+//! openAudioData return value, see openAudioData()
+struct openAudioData_t {
+	file::ptr audioData; // audio data stream
+	audio_chunk::spec_t audioSpec; // format description (sample rate, channel layout).
+};
+
+//! Opens the specified location as a stream of audio_samples. \n
+//! Returns a file object that allows you to read the audio data stream as if it was a physical file, together with audio stream format description (sample rate, channel layout). \n
+//! Please keep in mind that certain features of the returned file object are only as reliable as the underlying file format or decoder implementation allows them to be. \n
+//! Reported exact file size may be either unavailable or unreliable if the file format does not let us known the exact value without decoding the whole file. \n
+//! Seeking may be inaccurate with certain file formats. \n
+//! In general, all file object methods will work as intended on core-supported file formats such as FLAC or WavPack. \n
+//! However, if you want 100% functionality regardless of file format being worked with, mirror the content to a temp file and let go of the file object returned by openAudioData().
+openAudioData_t openAudioData(playable_location const & loc, bool bSeekable, file::ptr fileHint, abort_callback & aborter);
+
 #endif

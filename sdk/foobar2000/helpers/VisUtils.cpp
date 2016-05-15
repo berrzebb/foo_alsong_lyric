@@ -2,7 +2,7 @@
 
 namespace VisUtils {
 	void PrepareFFTChunk(audio_chunk const & source, audio_chunk & out, double centerOffset) {
-		const t_size channels = source.get_channel_count();
+		const t_uint32 channels = source.get_channel_count();
 		const t_uint32 sampleRate = source.get_sample_rate();
 		FB2K_DYNAMIC_ASSERT( sampleRate > 0 );
 		out.set_channels(channels, source.get_channel_config());

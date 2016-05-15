@@ -17,8 +17,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "foobar2000_sdk_helpers", ".
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "foobar2000_SDK", "..\sdk\foobar2000\SDK\foobar2000_SDK.vcxproj", "{E8091321-D79D-4575-86EF-064EA1A4A20D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "columns_ui_sdk", "..\sdk\foobar2000\vc\columns_ui-sdk.vcxproj", "{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libFLAC++_static", "..\3rdparty\libflac\build\libFLAC++_static.vcxproj", "{4CEFBC86-C215-11DB-8314-0800200C9A66}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libFLAC_static", "..\3rdparty\libflac\build\libFLAC_static.vcxproj", "{4CEFBC84-C215-11DB-8314-0800200C9A66}"
@@ -26,6 +24,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "win_utf8_io_static", "..\3rdparty\libflac\build\win_utf8_io_static.vcxproj", "{4CEFBE02-C215-11DB-8314-0800200C9A66}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libogg_static", "..\3rdparty\libflac\build\libogg_static.vcxproj", "{15CBFEFF-7965-41F5-B4E2-21E8795C9159}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "columns_ui_sdk", "..\sdk\foobar2000\vc\columns_ui-sdk.vcxproj", "{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -121,15 +121,6 @@ Global
 		{E8091321-D79D-4575-86EF-064EA1A4A20D}.Release|Win32.Build.0 = Release|Win32
 		{E8091321-D79D-4575-86EF-064EA1A4A20D}.Release|x64.ActiveCfg = Release|x64
 		{E8091321-D79D-4575-86EF-064EA1A4A20D}.Release|x64.Build.0 = Release|x64
-		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Debug|Win32.ActiveCfg = Debug|Win32
-		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Debug|Win32.Build.0 = Debug|Win32
-		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Debug|x64.ActiveCfg = Debug|Win32
-		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release staticlink|Win32.ActiveCfg = Release staticlink|Win32
-		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release staticlink|Win32.Build.0 = Release staticlink|Win32
-		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release staticlink|x64.ActiveCfg = Release staticlink|Win32
-		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release|Win32.ActiveCfg = Release|Win32
-		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release|Win32.Build.0 = Release|Win32
-		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release|x64.ActiveCfg = Release|Win32
 		{4CEFBC86-C215-11DB-8314-0800200C9A66}.Debug|Win32.ActiveCfg = Debug|Win32
 		{4CEFBC86-C215-11DB-8314-0800200C9A66}.Debug|Win32.Build.0 = Debug|Win32
 		{4CEFBC86-C215-11DB-8314-0800200C9A66}.Debug|x64.ActiveCfg = Debug|x64
@@ -178,6 +169,15 @@ Global
 		{15CBFEFF-7965-41F5-B4E2-21E8795C9159}.Release|Win32.Build.0 = Release|Win32
 		{15CBFEFF-7965-41F5-B4E2-21E8795C9159}.Release|x64.ActiveCfg = Release|x64
 		{15CBFEFF-7965-41F5-B4E2-21E8795C9159}.Release|x64.Build.0 = Release|x64
+		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Debug|Win32.Build.0 = Debug|Win32
+		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Debug|x64.ActiveCfg = Debug|Win32
+		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release staticlink|Win32.ActiveCfg = Release staticlink|Win32
+		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release staticlink|Win32.Build.0 = Release staticlink|Win32
+		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release staticlink|x64.ActiveCfg = Release staticlink|Win32
+		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release|Win32.ActiveCfg = Release|Win32
+		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release|Win32.Build.0 = Release|Win32
+		{93EC0EDE-01CD-4FB0-B8E8-4F2A027E026E}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

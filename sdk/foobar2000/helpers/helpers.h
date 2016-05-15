@@ -7,7 +7,6 @@
 #include "dropdown_helper.h"
 #include "window_placement_helper.h"
 #include "win32_dialog.h"
-#include "wildcard.h"
 #include "cuesheet_index_list.h"
 #include "cue_creator.h"
 #include "cue_parser.h"
@@ -25,6 +24,7 @@
 #include "bitreader_helper.h"
 #include "mp3_utils.h"
 #include "win32_misc.h"
+#include "fb2k_threads.h"
 #include "COM_utils.h"
 #include "metadb_io_hintlist.h"
 #include "meta_table_builder.h"
@@ -41,5 +41,6 @@
 #include "file_win32_wrapper.h"
 #include "fullFileBuffer.h"
 #include "CPowerRequest.h"
+#include "writer_wav.h"
 
 #endif //_FOOBAR2000_SDK_HELPERS_H_

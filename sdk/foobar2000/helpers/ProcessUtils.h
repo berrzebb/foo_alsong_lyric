@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 namespace ProcessUtils {
 	class PipeIO : public stream_reader, public stream_writer {
 	public:
@@ -268,3 +270,6 @@ namespace ProcessUtils {
 		PFC_CLASS_NOT_COPYABLE_EX(SubProcess)
 	};
 }
+
+#endif // _WIN32
+

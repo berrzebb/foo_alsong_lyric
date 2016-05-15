@@ -60,3 +60,42 @@ bool metadb_handle::get_browse_info_merged(file_info & infoMerged) const {
 	}
 	return rv;
 }
+
+namespace {
+	class metadb_info_container_impl : public metadb_info_container {
+	public:
+		metadb_info_container_impl() : m_stats( filestats_invalid ), m_partial() {}
+		file_info const & info() {
+			return m_info;
+		}
+		t_filestats const & stats() {
+			return m_stats;
+		}
+		bool isInfoPartial() {
+			return m_partial;
+		}
+
+		file_info_impl m_info;
+		t_filestats m_stats;
+		bool m_partial;
+		
+	};
+}
+
+metadb_info_container::ptr metadb_handle::get_full_info_ref( abort_callback & aborter ) const {
+	{
+		metadb_info_container::ptr info;
+		if (this->get_info_ref( info ) ) {
+			if (!info->isInfoPartial()) return info;
+		}
+	}
+
+
+	input_info_reader::ptr reader;
+	input_entry::g_open_for_info_read( reader, NULL, this->get_path(), aborter );
+	
+	service_ptr_t< metadb_info_container_impl > obj = new service_impl_t<metadb_info_container_impl>();
+	obj->m_stats = reader->get_file_stats( aborter );
+	reader->get_info( this->get_subsong_index(), obj->m_info, aborter );
+	return obj;
+}
